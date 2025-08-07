@@ -2,17 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Flame, Star, Wifi, Car, Coffee, Utensils, Camera, X, ChevronLeft, ChevronRight, Grid, List, Home, Bed, Bath, MapPin, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 const API_BASE_ROOM = 'http://localhost:5116/api/Room';
+const API_BASE_ROOM_TYPE = "http://localhost:5116/api/roomtype";
 
 const Kamar = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
+  const [roomTypes, setRoomTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
   const [isVisible, setIsVisible] = useState(false);
   const [selectedRoomType, setSelectedRoomType] = useState('all');
-   const navigate = useNavigate();
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsVisible(true);
@@ -24,14 +27,13 @@ const Kamar = () => {
         setLoading(true);
         setError(null);
         const response = await fetch(API_BASE_ROOM);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        const data = await response.json();
-        console.log('API Response:', data); // For debugging
-        
+
+        const data = await response.json()
+
         // Handle different response structures
         let roomsData = [];
         if (Array.isArray(data)) {
@@ -44,10 +46,9 @@ const Kamar = () => {
           console.warn('Unexpected API response structure:', data);
           roomsData = [];
         }
-        
+
         setRooms(roomsData);
       } catch (err) {
-        console.error("Failed to fetch rooms:", err);
         setError(err.message);
         setRooms([]);
       } finally {
@@ -58,28 +59,52 @@ const Kamar = () => {
     fetchRooms();
   }, []);
 
-  // Room type categories for filtering
-  const getRoomTypeCounts = () => {
-    return {
-      all: rooms.length,
-      standard: rooms.filter(r => r.name?.toLowerCase().includes('standard')).length,
-      deluxe: rooms.filter(r => r.name?.toLowerCase().includes('deluxe')).length,
-      premium: rooms.filter(r => r.name?.toLowerCase().includes('premium')).length
+  useEffect(() => {
+    const fetchRoomTypes = async () => {
+      try {
+        const response = await fetch(API_BASE_ROOM_TYPE);
+        const data = await response.json();
+        const values = data?.$values ?? [];
+        const countsByType = {};
+
+        rooms.forEach(room => {
+          const typeId = room.roomTypeId;
+          if (typeId) {
+            countsByType[typeId] = (countsByType[typeId] || 0) + 1;
+          }
+        });
+
+        const parsed = values.map(item => ({
+          id: item.roomTypeId,
+          name: item.name,
+          count: countsByType[item.roomTypeId] || 0
+        }));
+
+        const total = rooms.length;
+
+        parsed.unshift({
+          id: 'all',
+          name: 'Semua Kamar',
+          count: total,
+        });
+
+        setRoomTypes(parsed);
+      } catch (error) {
+        console.error('Error fetching room types:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
     };
-  };
 
-  const counts = getRoomTypeCounts();
-  
-  const roomTypes = [
-    { id: 'all', name: 'Semua Kamar', count: counts.all },
-    { id: 'standard', name: 'Standard', count: counts.standard },
-    { id: 'deluxe', name: 'Deluxe', count: counts.deluxe },
-    { id: 'premium', name: 'Premium', count: counts.premium }
-  ];
+    fetchRoomTypes();
+  }, [rooms]); // jangan lupa dependensinya rooms
 
-  const filteredRooms = selectedRoomType === 'all'
-    ? rooms
-    : rooms.filter(room => room.name?.toLowerCase().includes(selectedRoomType));
+  // Filter rooms sesuai tipe yang dipilih
+  const filteredRooms = rooms.filter(room => {
+    if (selectedRoomType === 'all') return true;
+    return room.roomTypeId === selectedRoomType;
+  });
 
   const getAmenityIcon = (amenity) => {
     const amenityLower = amenity?.toLowerCase();
@@ -91,10 +116,12 @@ const Kamar = () => {
   };
 
   const getRoomTypeIcon = (typeId) => {
+    if (typeId === 'all') return <Camera className="w-5 h-5" />;
+
     switch (typeId) {
-      case 'standard': return <Home className="w-5 h-5" />;
-      case 'deluxe': return <Bed className="w-5 h-5" />;
-      case 'premium': return <Bath className="w-5 h-5" />;
+      case 1: return <Home className="w-5 h-5" />;
+      case 2: return <Bed className="w-5 h-5" />;
+      case 3: return <Bath className="w-5 h-5" />;
       default: return <Camera className="w-5 h-5" />;
     }
   };
@@ -115,7 +142,6 @@ const Kamar = () => {
   };
 
   const handleBookingClick = (roomId) => {
-   console.log('Booking room:', roomId);
     navigate(`/PesananKamar/${roomId}`);
   };
 
@@ -131,13 +157,13 @@ const Kamar = () => {
     return price || 'Hubungi kami';
   };
 
-  const getRoomType = (roomName) => {
-    if (!roomName) return 'Standard';
-    const name = roomName.toLowerCase();
-    if (name.includes('premium')) return 'Premium';
-    if (name.includes('deluxe')) return 'Deluxe';
-    return 'Standard';
-  };
+  // const getRoomType = (roomName) => {
+  //   if (!roomName) return 'Standard';
+  //   const name = roomName.toLowerCase();
+  //   if (name.includes('premium')) return 'Premium';
+  //   if (name.includes('deluxe')) return 'Deluxe';
+  //   return 'Standard';
+  // };
 
   // Loading State
   if (loading) {
@@ -162,8 +188,8 @@ const Kamar = () => {
           </div>
           <h2 className="text-2xl font-bold text-stone-800 mb-2">Gagal Memuat Data Kamar</h2>
           <p className="text-stone-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="bg-rose-500 text-white px-6 py-3 rounded-xl hover:bg-rose-600 transition-colors"
           >
             Coba Lagi
@@ -241,21 +267,19 @@ const Kamar = () => {
                   key={type.id}
                   onClick={() => setSelectedRoomType(type.id)}
                   disabled={type.count === 0 && type.id !== 'all'}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 ${
-                    selectedRoomType === type.id
-                      ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg'
-                      : type.count === 0 && type.id !== 'all'
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 ${selectedRoomType === type.id
+                    ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg'
+                    : type.count === 0 && type.id !== 'all'
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200'
-                  }`}
+                    }`}
                 >
                   {getRoomTypeIcon(type.id)}
                   <span>{type.name}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    selectedRoomType === type.id
-                      ? 'bg-white/20 text-white'
-                      : 'bg-stone-200 text-stone-600'
-                  }`}>
+                  <span className={`px-2 py-1 rounded-full text-xs ${selectedRoomType === type.id
+                    ? 'bg-white/20 text-white'
+                    : 'bg-stone-200 text-stone-600'
+                    }`}>
                     {type.count}
                   </span>
                 </button>
@@ -266,22 +290,20 @@ const Kamar = () => {
             <div className="flex items-center gap-2 bg-white rounded-2xl p-1 border border-stone-200">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
-                  viewMode === 'grid'
-                    ? 'bg-rose-500 text-white shadow-md'
-                    : 'text-stone-600 hover:bg-stone-100'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${viewMode === 'grid'
+                  ? 'bg-rose-500 text-white shadow-md'
+                  : 'text-stone-600 hover:bg-stone-100'
+                  }`}
               >
                 <Grid className="w-4 h-4" />
                 Grid
               </button>
               <button
                 onClick={() => setViewMode('masonry')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
-                  viewMode === 'masonry'
-                    ? 'bg-rose-500 text-white shadow-md'
-                    : 'text-stone-600 hover:bg-stone-100'
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${viewMode === 'masonry'
+                  ? 'bg-rose-500 text-white shadow-md'
+                  : 'text-stone-600 hover:bg-stone-100'
+                  }`}
               >
                 <List className="w-4 h-4" />
                 Masonry
@@ -305,17 +327,15 @@ const Kamar = () => {
               </p>
             </div>
           ) : (
-            <div className={`${
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'
-                : 'columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8'
-            }`}>
+            <div className={`${viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'
+              : 'columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8'
+              }`}>
               {filteredRooms.map((room, index) => (
                 <div
                   key={room.id}
-                  className={`group cursor-pointer transform transition-all duration-500 hover:scale-105 ${
-                    isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-                  } ${viewMode === 'masonry' ? 'break-inside-avoid mb-8' : ''}`}
+                  className={`group cursor-pointer transform transition-all duration-500 hover:scale-105 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                    } ${viewMode === 'masonry' ? 'break-inside-avoid mb-8' : ''}`}
                   style={{ transitionDelay: `${index * 50}ms` }}
                   onMouseEnter={() => setSelectedRoom(room.id)}
                   onMouseLeave={() => setSelectedRoom(null)}
@@ -372,7 +392,7 @@ const Kamar = () => {
                             <Bed className="w-4 h-4" />
                           </div>
                           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">
-                            {getRoomType(room.name)}
+                            {room.roomType?.name ?? "Standard"}
                           </span>
                         </div>
                         <div className="flex items-center">
@@ -460,7 +480,7 @@ const Kamar = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
+              <button
                 onClick={() => alert('Fitur hubungi kami - implementasi sesuai kebutuhan')}
                 className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl text-lg"
               >
@@ -469,7 +489,7 @@ const Kamar = () => {
                   Hubungi Kami Sekarang
                 </span>
               </button>
-              <button 
+              <button
                 onClick={() => alert('Fitur lihat lokasi - implementasi sesuai kebutuhan')}
                 className="bg-white border-2 border-rose-200 text-rose-600 font-bold py-4 px-8 rounded-2xl hover:bg-rose-50 transition-all duration-300 text-lg"
               >

@@ -15,7 +15,7 @@ function App() {
       <Navbar/>
         <Routes>
           {/* <Route path='/' element={<KosanHomepage/>} /> */}
-          <Route path='/' element={<KosanHomepage/>} />
+          <Route path='/' element={<KosAdminDashboard/>} />
           <Route path='/Kamar' element={<Kamar/>}/>
           <Route path='/Gallery' element={<Gallery/>}/>
          <Route path="/PesananKamar/:roomId" element={<PesananKamar />} />
