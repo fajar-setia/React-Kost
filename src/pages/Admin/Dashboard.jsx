@@ -455,16 +455,13 @@ function GalleryLayout({
 function BookingLayout({
   bookings,
   formatCurrency,
-  getStatusColor
+  getStatusColor,
+  handleDelete
 }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Manajemen Booking</h2>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Booking Baru
-        </button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -504,7 +501,7 @@ function BookingLayout({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-gray-900">{b.customerName}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">{b.roomId}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">{b.roomName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500">{new Date(b.startDate).toLocaleDateString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500">{new Date(b.endDate).toLocaleDateString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -513,7 +510,7 @@ function BookingLayout({
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">
-                    {formatCurrency(b.price)}
+                    {formatCurrency(b.totalPrice)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
@@ -523,7 +520,9 @@ function BookingLayout({
                       <button className="text-green-600 hover:text-green-900">
                         <Edit3 className="h-4 w-4" />
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
+                      <button
+                        onClick={() => handleDelete(b.id)}
+                        className="text-red-600 hover:text-red-900">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -680,12 +679,15 @@ export default function KosAdminDashboard() {
 
   //untuk format uang
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+  const number = Number(amount);
+  if (isNaN(number)) return "Rp0"; // default kalau bukan angka
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(number);
+};
+
   //untuk format warna status
   const getStatusColor = (status) => {
     switch (status) {
@@ -846,6 +848,29 @@ export default function KosAdminDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Yakin ingin menghapus booking ini?")) return;
+
+    try {
+      const response = await fetch(`http://localhost:5116/api/Booking/${id}`, {
+        method: "DELETE"
+      });
+
+      if (response.ok) {
+        alert("Booking berhasil dihapus");
+        // Update state bookings di parent
+        setBookings(prev => prev.filter(b => b.id !== id));
+      } else {
+        const errorText = await response.text();
+        console.error("Gagal menghapus booking:", errorText);
+        alert("Gagal menghapus booking. Silakan coba lagi.");
+      }
+    } catch (error) {
+      console.error("Terjadi kesalahan saat menghapus:", error);
+      alert("Terjadi kesalahan saat menghapus booking.");
+    }
+  };
+
   //Reviews
   useEffect(() => {
     fetch(API_BASE_REVIEW)
@@ -987,7 +1012,8 @@ export default function KosAdminDashboard() {
       case 'booking': return <BookingLayout{...{
         bookings,
         formatCurrency,
-        getStatusColor
+        getStatusColor,
+        handleDelete
       }} />;
       case 'room': return <RoomLayout {...{
         rooms,
@@ -1004,7 +1030,7 @@ export default function KosAdminDashboard() {
         roomTypes,
         setShowFormType,
         showFormType,
-        availableAmenities
+        availableAmenities,
       }} />;
       case 'review': return <ReviewLayout{...{
         reviews

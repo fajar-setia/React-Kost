@@ -1,4 +1,5 @@
 import { Home, Phone, MapPin, Star } from 'lucide-react';
+import LogoKost from '../assets/bg/logoKost.png'
 
 function Footer() {
 
@@ -8,11 +9,11 @@ function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="col-span-2">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center">
-                <Home className="w-7 h-7 text-white" />
+              <div className="w-15 h-15 bg-gradient-to-br from-white to-white rounded-xl flex items-center justify-center">
+                <img src={LogoKost} alt="logo kost" />
               </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent">
-                Kos Mawar
+              <span className="text-3xl font-bold bg-gradient-to-r from-white to-white bg-clip-text text-transparent">
+                Kos Ji?
               </span>
             </div>
             <p className="text-stone-400 leading-relaxed max-w-md mb-6">

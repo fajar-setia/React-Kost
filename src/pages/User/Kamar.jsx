@@ -331,132 +331,134 @@ const Kamar = () => {
               ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'
               : 'columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8'
               }`}>
-              {filteredRooms.map((room, index) => (
-                <div
-                  key={room.id}
-                  className={`group cursor-pointer transform transition-all duration-500 hover:scale-105 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-                    } ${viewMode === 'masonry' ? 'break-inside-avoid mb-8' : ''}`}
-                  style={{ transitionDelay: `${index * 50}ms` }}
-                  onMouseEnter={() => setSelectedRoom(room.id)}
-                  onMouseLeave={() => setSelectedRoom(null)}
-                >
-                  <div className="relative overflow-hidden rounded-3xl bg-white shadow-lg hover:shadow-2xl border border-stone-100">
-                    {/* Featured Badge */}
-                    {room.rating >= 5 && (
-                      <div className="absolute top-4 left-4 z-10">
-                        <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                          <Star className="w-3 h-3" />
-                          Featured
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Price Tag */}
-                    <div className="absolute top-4 right-4 z-10">
-                      <div className="bg-gradient-to-r from-rose-600 to-pink-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
-                        {formatPrice(room.price)}
-                      </div>
-                    </div>
-
-                    {/* Room Image */}
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <img
-                        src={`http://localhost:5116${room.mainImageUrl}`}
-                        alt={room.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        onError={(e) => {
-                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y3ZjhmOSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM2YjczODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HYW1iYXIgVGlkYWsgRGl0ZW11a2FuPC90ZXh0Pjwvc3ZnPg==';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                      {/* Overlay Content */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white text-center">
-                          <Camera className="w-8 h-8 mx-auto mb-2" />
-                          <div className="font-semibold">Lihat Detail</div>
-                        </div>
-                      </div>
-
-                      {/* Fire effect overlay on hover */}
-                      {selectedRoom === room.id && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-rose-900/40 via-orange-900/20 to-transparent animate-pulse"></div>
-                      )}
-                    </div>
-
-                    {/* Room Info */}
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-                            <Bed className="w-4 h-4" />
+              {filteredRooms.map((room, index) => {
+                return (
+                  <div
+                    key={room.id}
+                    className={`group cursor-pointer transform transition-all duration-500 hover:scale-105 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                      } ${viewMode === 'masonry' ? 'break-inside-avoid mb-8' : ''}`}
+                    style={{ transitionDelay: `${index * 50}ms` }}
+                    onMouseEnter={() => setSelectedRoom(room.id)}
+                    onMouseLeave={() => setSelectedRoom(null)}
+                  >
+                    <div className="relative overflow-hidden rounded-3xl bg-white shadow-lg hover:shadow-2xl border border-stone-100">
+                      {/* Featured Badge */}
+                      {room.rating >= 5 && (
+                        <div className="absolute top-4 left-4 z-10">
+                          <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                            <Star className="w-3 h-3" />
+                            Featured
                           </div>
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">
-                            {room.roomType?.name ?? "Standard"}
-                          </span>
                         </div>
-                        <div className="flex items-center">
-                          {[...Array(Math.min(room.rating || 0, 5))].map((_, i) => (
-                            <Star key={i} size={16} className="text-yellow-500 fill-current" />
-                          ))}
-                        </div>
+                      )}
+
+                      {/* status */}
+                      <div className="absolute top-4 right-4 z-10">
+                        {room.isAvailable ? (
+                          <span className="text-green-600 font-bold bg-green-300 px-3 py-1.5 rounded-2xl">Tersedia</span>
+                        ) : (
+                          <span className="text-red-600 font-bold bg-red-300 px-3 py-1.5 rounded-2xl">Tidak Tersedia</span>
+                        )}
+
                       </div>
 
-                      <h3 className="text-xl font-bold text-stone-800 mb-2 group-hover:text-rose-600 transition-colors">
-                        {room.name}
-                      </h3>
+                      {/* Room Image */}
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        <img
+                          src={`http://localhost:5116${room.mainImageUrl}`}
+                          alt={room.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          onError={(e) => {
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y3ZjhmOSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM2YjczODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HYW1iYXIgVGlkYWsgRGl0ZW11a2FuPC90ZXh0Pjwvc3ZnPg==';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                      <p className="text-stone-600 mb-4 leading-relaxed">
-                        {room.description}
-                      </p>
+                        {/* Overlay Content */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white text-center">
+                            <Camera className="w-8 h-8 mx-auto mb-2" />
+                            <div className="font-semibold">Lihat Detail</div>
+                          </div>
+                        </div>
 
-                      {/* Amenities */}
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {Array.isArray(room.amenities) && room.amenities.length > 0 ? (
-                          room.amenities.map((amenity, amenityIndex) => (
-                            <div
-                              key={amenityIndex}
-                              className="flex items-center gap-1 bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm border border-stone-200 hover:border-rose-300 transition-colors"
-                            >
-                              {getAmenityIcon(amenity)}
-                              <span>{amenity}</span>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-stone-500 text-sm italic">Fasilitas akan segera tersedia</div>
+                        {/* Fire effect overlay on hover */}
+                        {selectedRoom === room.id && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-rose-900/40 via-orange-900/20 to-transparent animate-pulse"></div>
                         )}
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => openLightbox(room)}
-                          className="flex-1 bg-white border-2 border-rose-200 text-rose-600 font-semibold py-3 px-4 rounded-xl hover:bg-rose-50 transition-all duration-300"
-                        >
-                          <span className="flex items-center justify-center">
-                            <Camera size={18} className="mr-2" />
-                            Lihat Detail
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => handleBookingClick(room.id)}
-                          className="flex-1 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                        >
-                          <span className="flex items-center justify-center">
-                            <Flame size={18} className="mr-2" />
-                            Pesan
-                          </span>
-                        </button>
-                      </div>
-                    </div>
+                      {/* Room Info */}
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                              <Bed className="w-4 h-4" />
+                            </div>
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">
+                              {room.roomType?.name ?? "Standard"}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            {[...Array(Math.min(room.rating || 0, 5))].map((_, i) => (
+                              <Star key={i} size={16} className="text-yellow-500 fill-current" />
+                            ))}
+                          </div>
+                        </div>
 
-                    {/* Glow effect on hover */}
-                    {selectedRoom === room.id && (
-                      <div className="absolute inset-0 rounded-3xl border-2 border-rose-300/60 shadow-[0_0_30px_rgba(244,63,94,0.3)] pointer-events-none"></div>
-                    )}
+                        <h3 className="text-xl font-bold text-stone-800 mb-2 group-hover:text-rose-600 transition-colors">
+                          {room.name}
+                        </h3>
+
+                        <p className="text-stone-600 mb-4 leading-relaxed">
+                          {room.description}
+                        </p>
+
+                        {/* Amenities */}
+                        <div className="flex flex-wrap gap-2 mb-6">
+                          {Array.isArray(room.amenities?.$values) && room.amenities.$values.length > 0 ? (
+                            room.amenities.$values.map((amenity, amenityIndex) => (
+                              <div key={amenityIndex} className="flex items-center gap-1 bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm border border-stone-200 hover:border-rose-300 transition-colors">
+                                {getAmenityIcon(amenity.name)}
+                                <span>{amenity.name}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-stone-500 text-sm italic">Fasilitas akan segera tersedia</div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => openLightbox(room)}
+                            className="flex-1 bg-white border-2 border-rose-200 text-rose-600 font-semibold py-3 px-4 rounded-xl hover:bg-rose-50 transition-all duration-300"
+                          >
+                            <span className="flex items-center justify-center">
+                              <Camera size={18} className="mr-2" />
+                              Lihat Detail
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => handleBookingClick(room.id)}
+                            className="flex-1 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                          >
+                            <span className="flex items-center justify-center">
+                              <Flame size={18} className="mr-2" />
+                              Pesan
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Glow effect on hover */}
+                      {selectedRoom === room.id && (
+                        <div className="absolute inset-0 rounded-3xl border-2 border-rose-300/60 shadow-[0_0_30px_rgba(244,63,94,0.3)] pointer-events-none"></div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -1,17 +1,92 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Flame, Star, Wifi, Car, Coffee, Utensils, Camera, X, ChevronLeft, 
+import {
+  Flame, Star, Wifi, Car, Coffee, Utensils, Camera, X, ChevronLeft,
   Calendar, Clock, Users, CreditCard, Check, MapPin, Phone, Mail,
-  Bed, Bath, Home, User, ArrowRight, Loader, AlertCircle
+  Bed, Bath, Home, User, ArrowRight, Loader, AlertCircle, Wallet
 } from 'lucide-react';
 
 const API_BASE_ROOM = 'http://localhost:5116/api/Room';
 
+function DetailKamar({
+  room,
+  formatPrice,
+  getRoomType,
+  getAmenityIcon,
+}) {
+  return (
+    <div className="p-8">
+      <h2 className="text-2xl font-bold text-stone-800 mb-6">Detail Kamar</h2>
+
+      <div className="relative overflow-hidden rounded-2xl mb-6">
+        <img
+          src={`http://localhost:5116${room.mainImageUrl}`}
+          alt={room.name}
+          className="w-full h-64 object-cover"
+          onError={(e) => {
+            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y3ZjhmOSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM2YjczODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HYW1iYXIgVGlkYWsgRGl0ZW11a2FuPC90ZXh0Pjwvc3ZnPg==';
+          }}
+        />
+        <div className="absolute top-4 right-4">
+          <div className="bg-gradient-to-r from-rose-600 to-pink-600 text-white px-4 py-2 rounded-full font-bold text-sm">
+            {formatPrice(room.price)}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-stone-800">{room.name}</h3>
+          <div className="flex items-center">
+            {[...Array(Math.min(room.rating || 0, 5))].map((_, i) => (
+              <Star key={i} size={16} className="text-yellow-500 fill-current" />
+            ))}
+          </div>
+        </div>
+
+        <p className="text-stone-600">{room.description}</p>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+              <Bed className="w-4 h-4" />
+            </div>
+            <span className="font-semibold text-stone-700">{getRoomType(room.name)}</span>
+          </div>
+        </div>
+
+        {/* Amenities */}
+        <div>
+          <h4 className="font-semibold text-stone-800 mb-3">Fasilitas Kamar</h4>
+          <div className="flex flex-wrap gap-2">
+            {Array.isArray(room.amenities?.$values) && room.amenities.$values.length > 0 ? (
+              room.amenities.$values.map((amenity, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-1 bg-stone-100 text-stone-700 px-3 py-2 rounded-full text-sm border border-stone-200"
+                >
+                  {getAmenityIcon(amenity.name)}
+                  <span>{amenity.name}</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-stone-500 text-sm italic">
+                Fasilitas akan segera tersedia
+              </div>
+            )}
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  );
+}
+
 const PesananKamar = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  
+
   // States
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,21 +94,19 @@ const PesananKamar = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Guest Information
     fullName: '',
     email: '',
     phone: '',
-    nationality: 'Indonesia',
-    
+
     // Booking Details
     checkIn: '',
     checkOut: '',
-    guests: 1,
-    rooms: 1,
-    
+    rooms: 1,  // Fix: ubah dari JumlahKamar ke rooms
+    guests: 1, // Fix: ubah dari JumlahTamu ke guests
+
     // Special Requests
     specialRequests: '',
-    
+
     // Payment
     paymentMethod: 'transfer'
   });
@@ -48,14 +121,14 @@ const PesananKamar = () => {
         setLoading(true);
         setError(null);
         const response = await fetch(`${API_BASE_ROOM}/${roomId}`);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('Room Data:', data);
-        
+
         setRoom(data);
       } catch (err) {
         console.error("Failed to fetch room:", err);
@@ -101,25 +174,119 @@ const PesananKamar = () => {
   };
 
   const calculateTotal = () => {
-    if (!room || !formData.checkIn || !formData.checkOut) return 0;
-    
-    const checkIn = new Date(formData.checkIn);
-    const checkOut = new Date(formData.checkOut);
-    const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-    
-    return nights * room.price * formData.rooms;
+    const hargaPerMalam = Number(room?.pricePerNight) || 0;
+    const jumlahKamar = Number(formData.rooms) || 0;
+    const lamaInap =
+      (new Date(formData.checkOut) - new Date(formData.checkIn)) /
+      (1000 * 60 * 60 * 24);
+
+    return hargaPerMalam * jumlahKamar * (lamaInap || 0);
   };
+
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    console.log(`Updated ${field}:`, value); // Debug: untuk melihat perubahan data
   };
 
   const handleNextStep = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handleNextStepForm = async () => {
+    // 1️⃣ Validasi form
+    const requiredFields = {
+      fullName: 'Nama Lengkap',
+      email: 'Email',
+      phone: 'Nomor Telepon',
+      checkIn: 'Tanggal Check-in',
+      checkOut: 'Tanggal Check-out'
+    };
+
+    const missingFields = Object.entries(requiredFields)
+      .filter(([field]) => !formData[field] || formData[field].trim() === '')
+      .map(([, label]) => label);
+
+    if (missingFields.length > 0) {
+      alert(`Mohon lengkapi field berikut: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    const checkInDate = new Date(formData.checkIn);
+    const checkOutDate = new Date(formData.checkOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (checkInDate < today) {
+      alert("Tanggal check-in tidak boleh kurang dari hari ini");
+      return;
+    }
+
+    if (checkOutDate <= checkInDate) {
+      alert("Tanggal check-out harus setelah tanggal check-in");
+      return;
+    }
+
+    try {
+      console.log('Form data before booking:', formData);
+
+      // 3️⃣ Cek ketersediaan
+      const checkResponse = await fetch(
+        `http://localhost:5116/api/Booking/available?roomId=${roomId}&startDate=${formData.checkIn}&endDate=${formData.checkOut}`
+      );
+
+      if (!checkResponse.ok) {
+        throw new Error('Gagal mengecek ketersediaan kamar');
+      }
+
+      const availabilityData = await checkResponse.json();
+      console.log("Availability data:", availabilityData);
+
+      // Pastikan sesuai format dari backend
+      if (!availabilityData.available) {
+        alert("Maaf, kamar tidak tersedia untuk tanggal yang dipilih.");
+        return;
+      }
+
+      // 4️⃣ Siapkan data booking
+      const BookingData = {
+        roomId: roomId,
+        startDate: new Date(formData.checkIn).toISOString(),
+        endDate: new Date(formData.checkOut).toISOString(),
+        customerName: formData.fullName.trim(),
+        customerEmail: formData.email.trim(),
+        customerPhone: formData.phone.trim(),
+        jumlahTamu: formData.guests,   // ubah key
+        jumlahKamar: formData.rooms,   // ubah key
+        specialRequests: formData.specialRequests?.trim() || null
+      };
+
+      console.log('Booking data to send:', BookingData);
+
+      // 5️⃣ Kirim booking
+      const response = await fetch("http://localhost:5116/api/Booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(BookingData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Booking berhasil", result);
+        setCurrentStep(currentStep + 1);
+      } else {
+        const errorText = await response.text();
+        console.error("Gagal booking", errorText);
+        alert("Gagal melakukan booking. Silakan coba lagi.");
+      }
+    } catch (error) {
+      console.error("Terjadi kesalahan", error);
+      alert("Terjadi kesalahan saat melakukan booking. Silakan coba lagi.");
     }
   };
 
@@ -131,7 +298,7 @@ const PesananKamar = () => {
 
   const handleSubmitBooking = () => {
     // Here you would typically send the booking data to your API
-    console.log('Booking Data:', { ...formData, roomId, total: calculateTotal() });
+    console.log('Final Booking Data:', { ...formData, roomId, total: calculateTotal() });
     alert('Pesanan berhasil dikirim! Kami akan menghubungi Anda segera.');
     navigate('/');
   };
@@ -160,14 +327,14 @@ const PesananKamar = () => {
           <h2 className="text-2xl font-bold text-stone-800 mb-2">Kamar Tidak Ditemukan</h2>
           <p className="text-stone-600 mb-4">{error || 'Data kamar tidak dapat ditemukan'}</p>
           <div className="flex gap-3 justify-center">
-            <button 
-              onClick={() => navigate('/')} 
+            <button
+              onClick={() => navigate('/')}
               className="bg-rose-500 text-white px-6 py-3 rounded-xl hover:bg-rose-600 transition-colors"
             >
               Kembali ke Beranda
             </button>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="bg-white border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-xl hover:bg-stone-50 transition-colors"
             >
               Coba Lagi
@@ -231,27 +398,24 @@ const PesananKamar = () => {
               <div className="flex items-center gap-4 bg-white rounded-2xl p-2 shadow-lg border border-stone-200">
                 {steps.map((step, index) => (
                   <React.Fragment key={step.id}>
-                    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
-                      currentStep === step.id
-                        ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white'
-                        : currentStep > step.id
+                    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${currentStep === step.id
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white'
+                      : currentStep > step.id
                         ? 'bg-green-100 text-green-700'
                         : 'bg-stone-100 text-stone-600'
-                    }`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                        currentStep === step.id
-                          ? 'bg-white/20'
-                          : currentStep > step.id
+                      }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${currentStep === step.id
+                        ? 'bg-white/20'
+                        : currentStep > step.id
                           ? 'bg-green-500 text-white'
                           : 'bg-stone-300 text-stone-600'
-                      }`}>
+                        }`}>
                         {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
                       </div>
                       <div className="hidden sm:block">
                         <div className="font-semibold text-sm">{step.title}</div>
-                        <div className={`text-xs ${
-                          currentStep === step.id ? 'text-white/80' : 'text-stone-500'
-                        }`}>
+                        <div className={`text-xs ${currentStep === step.id ? 'text-white/80' : 'text-stone-500'
+                          }`}>
                           {step.description}
                         </div>
                       </div>
@@ -276,66 +440,13 @@ const PesananKamar = () => {
               <div className="bg-white rounded-3xl shadow-lg border border-stone-100 overflow-hidden">
                 {/* Step 1: Room Details */}
                 {currentStep === 1 && (
-                  <div className="p-8">
-                    <h2 className="text-2xl font-bold text-stone-800 mb-6">Detail Kamar</h2>
-                    
-                    <div className="relative overflow-hidden rounded-2xl mb-6">
-                      <img
-                        src={`http://localhost:5116${room.mainImageUrl}`}
-                        alt={room.name}
-                        className="w-full h-64 object-cover"
-                        onError={(e) => {
-                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y3ZjhmOSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM2YjczODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HYW1iYXIgVGlkYWsgRGl0ZW11a2FuPC90ZXh0Pjwvc3ZnPg==';
-                        }}
-                      />
-                      <div className="absolute top-4 right-4">
-                        <div className="bg-gradient-to-r from-rose-600 to-pink-600 text-white px-4 py-2 rounded-full font-bold text-sm">
-                          {formatPrice(room.price)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-stone-800">{room.name}</h3>
-                        <div className="flex items-center">
-                          {[...Array(Math.min(room.rating || 0, 5))].map((_, i) => (
-                            <Star key={i} size={16} className="text-yellow-500 fill-current" />
-                          ))}
-                        </div>
-                      </div>
-
-                      <p className="text-stone-600">{room.description}</p>
-
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-                            <Bed className="w-4 h-4" />
-                          </div>
-                          <span className="font-semibold text-stone-700">{getRoomType(room.name)}</span>
-                        </div>
-                      </div>
-
-                      {/* Amenities */}
-                      <div>
-                        <h4 className="font-semibold text-stone-800 mb-3">Fasilitas Kamar</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {Array.isArray(room.amenities) && room.amenities.length > 0 ? (
-                            room.amenities.map((amenity, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center gap-1 bg-stone-100 text-stone-700 px-3 py-2 rounded-full text-sm border border-stone-200"
-                              >
-                                {getAmenityIcon(amenity)}
-                                <span>{amenity}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-stone-500 text-sm italic">Fasilitas akan segera tersedia</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                  <div>
+                    <DetailKamar
+                      room={room}
+                      formatPrice={formatPrice}
+                      getRoomType={getRoomType}
+                      getAmenityIcon={getAmenityIcon}
+                    />
 
                     <div className="flex justify-end mt-8">
                       <button
@@ -349,13 +460,14 @@ const PesananKamar = () => {
                       </button>
                     </div>
                   </div>
+
                 )}
 
                 {/* Step 2: Guest Information */}
                 {currentStep === 2 && (
-                  <div className="p-8">
+                  <div className="bg-white rounded-3xl shadow-lg border border-stone-100 p-6">
                     <h2 className="text-2xl font-bold text-stone-800 mb-6">Informasi Tamu & Reservasi</h2>
-                    
+
                     <div className="space-y-6">
                       {/* Guest Information */}
                       <div>
@@ -374,6 +486,7 @@ const PesananKamar = () => {
                               onChange={(e) => handleInputChange('fullName', e.target.value)}
                               className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:border-rose-500 focus:ring-2 focus:ring-rose-200 transition-all"
                               placeholder="Masukkan nama lengkap"
+                              required
                             />
                           </div>
                           <div>
@@ -386,9 +499,10 @@ const PesananKamar = () => {
                               onChange={(e) => handleInputChange('email', e.target.value)}
                               className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:border-rose-500 focus:ring-2 focus:ring-rose-200 transition-all"
                               placeholder="email@example.com"
+                              required
                             />
                           </div>
-                          <div>
+                          <div className="md:col-span-1">
                             <label className="block text-sm font-semibold text-stone-700 mb-2">
                               Nomor Telepon *
                             </label>
@@ -398,22 +512,8 @@ const PesananKamar = () => {
                               onChange={(e) => handleInputChange('phone', e.target.value)}
                               className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:border-rose-500 focus:ring-2 focus:ring-rose-200 transition-all"
                               placeholder="+62 812-3456-7890"
+                              required
                             />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-stone-700 mb-2">
-                              Kewarganegaraan
-                            </label>
-                            <select
-                              value={formData.nationality}
-                              onChange={(e) => handleInputChange('nationality', e.target.value)}
-                              className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:border-rose-500 focus:ring-2 focus:ring-rose-200 transition-all"
-                            >
-                              <option value="Indonesia">Indonesia</option>
-                              <option value="Malaysia">Malaysia</option>
-                              <option value="Singapore">Singapore</option>
-                              <option value="Others">Lainnya</option>
-                            </select>
                           </div>
                         </div>
                       </div>
@@ -434,6 +534,8 @@ const PesananKamar = () => {
                               value={formData.checkIn}
                               onChange={(e) => handleInputChange('checkIn', e.target.value)}
                               className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:border-rose-500 focus:ring-2 focus:ring-rose-200 transition-all"
+                              min={new Date().toISOString().split('T')[0]}
+                              required
                             />
                           </div>
                           <div>
@@ -445,6 +547,8 @@ const PesananKamar = () => {
                               value={formData.checkOut}
                               onChange={(e) => handleInputChange('checkOut', e.target.value)}
                               className="w-full px-4 py-3 border border-stone-300 rounded-xl focus:border-rose-500 focus:ring-2 focus:ring-rose-200 transition-all"
+                              min={formData.checkIn || new Date().toISOString().split('T')[0]}
+                              required
                             />
                           </div>
                           <div>
@@ -491,6 +595,14 @@ const PesananKamar = () => {
                           placeholder="Tuliskan permintaan khusus Anda (opsional)..."
                         />
                       </div>
+                      <div className='lg:col-span-2'>
+                        <DetailKamar
+                          room={room}
+                          formatPrice={formatPrice}
+                          getRoomType={getRoomType}
+                          getAmenityIcon={getAmenityIcon}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-between mt-8">
@@ -504,7 +616,7 @@ const PesananKamar = () => {
                         </span>
                       </button>
                       <button
-                        onClick={handleNextStep}
+                        onClick={handleNextStepForm}
                         className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
                       >
                         <span className="flex items-center">
@@ -520,7 +632,7 @@ const PesananKamar = () => {
                 {currentStep === 3 && (
                   <div className="p-8">
                     <h2 className="text-2xl font-bold text-stone-800 mb-6">Konfirmasi Reservasi</h2>
-                    
+
                     <div className="space-y-6">
                       {/* Booking Summary */}
                       <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-2xl p-6 border border-rose-200">
@@ -528,7 +640,7 @@ const PesananKamar = () => {
                           <Check className="w-5 h-5 mr-2 text-green-600" />
                           Ringkasan Pemesanan
                         </h3>
-                        
+
                         <div className="grid md:grid-cols-2 gap-4 text-sm">
                           <div className="space-y-2">
                             <div className="flex justify-between">
@@ -559,7 +671,7 @@ const PesananKamar = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         {formData.specialRequests && (
                           <div className="mt-4 pt-4 border-t border-rose-300">
                             <div className="text-stone-600 text-sm">Permintaan Khusus:</div>
@@ -598,7 +710,7 @@ const PesananKamar = () => {
                               onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
                               className="text-rose-600 focus:ring-rose-500"
                             />
-                                                        <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2">
                               <Wallet className="w-5 h-5 text-stone-600" />
                               <span className="font-semibold">Bayar di Tempat</span>
                             </div>

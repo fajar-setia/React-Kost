@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Phone, Eye, Home, Image, MessageCircle, BedSingle } from 'lucide-react';
+import LogoKost from '../assets/bg/logoKost.png'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,28 +28,30 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-      scrolled
-        ? 'bg-white/95 backdrop-blur-xl border-b border-stone-200/50 shadow-lg shadow-stone-900/5'
-        : 'bg-white/80 backdrop-blur-xl border-b border-white/20'
-    }`}>
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled
+      ? 'bg-white/95 backdrop-blur-xl border-b border-stone-200/50 shadow-lg shadow-stone-900/5'
+      : 'bg-white/80 backdrop-blur-xl border-b border-white/20'
+      }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="relative group cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center">
-                  <div className="w-4 h-4 bg-gradient-to-br from-rose-500 to-pink-600 rounded-md"></div>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img
+                src={LogoKost}
+                alt="logo kost"
+                className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+              />
               <div>
-                <div className="font-bold text-2xl bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 bg-clip-text text-transparent group-hover:from-rose-600 group-hover:via-pink-600 group-hover:to-rose-600 transition-all duration-300">
-                  Kos Adipati
+                <div className="font-bold text-lg sm:text-2xl bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 bg-clip-text text-transparent group-hover:from-rose-600 group-hover:via-pink-600 group-hover:to-rose-600 transition-all duration-300">
+                  Kos Ji?
                 </div>
-                <div className="text-xs text-stone-500 font-medium">Premium Living</div>
+                <div className="text-[10px] sm:text-xs text-stone-500 font-medium">
+                  Premium Living
+                </div>
               </div>
             </div>
+
             <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-rose-500 to-pink-600 group-hover:w-full transition-all duration-500"></div>
           </div>
 
@@ -70,7 +73,7 @@ export default function Navbar() {
                 <div className="absolute bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-rose-500 to-pink-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
               </a>
             ))}
-            
+
             {/* CTA Button */}
             <div className="ml-4 pl-4 border-l border-stone-200">
               <button className="group px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 overflow-hidden">
@@ -101,19 +104,17 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Menu Overlay */}
-      <div className={`md:hidden fixed inset-0 transition-all duration-500 ${
-        isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-      }`}>
+      <div className={`md:hidden fixed inset-0 transition-all duration-500 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}>
         {/* Backdrop */}
-        <div 
+        <div
           className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
           onClick={toggleMenu}
         ></div>
-        
+
         {/* Mobile Menu Panel */}
-        <div className={`absolute top-0 right-0 w-80 h-full bg-white/95 backdrop-blur-xl border-l border-stone-200 shadow-2xl transform transition-transform duration-500 ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}>
+        <div className={`absolute top-0 right-0 w-80 h-full bg-white/95 backdrop-blur-xl border-l border-stone-200 shadow-2xl transform transition-transform duration-500 ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}>
           <div className="flex flex-col h-full">
             {/* Mobile Header */}
             <div className="flex justify-between items-center p-6 border-b border-stone-100">
@@ -167,7 +168,7 @@ export default function Navbar() {
                     Hubungi via WhatsApp
                   </div>
                 </button>
-                
+
                 <button className="w-full py-4 bg-stone-100 text-stone-800 font-semibold rounded-xl hover:bg-stone-200 transition-all duration-300">
                   <div className="flex items-center justify-center gap-2">
                     <Eye className="w-5 h-5" />
