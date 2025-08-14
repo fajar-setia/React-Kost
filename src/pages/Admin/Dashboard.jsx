@@ -456,7 +456,9 @@ function BookingLayout({
   bookings,
   formatCurrency,
   getStatusColor,
-  handleDelete
+  handleDelete,
+  view,
+  setView
 }) {
   return (
     <div className="space-y-6">
@@ -512,14 +514,46 @@ function BookingLayout({
                   <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">
                     {formatCurrency(b.totalPrice)}
                   </td>
+
+                  {/* tombol aksi */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button onClick={() => setView(true)}
+                        className="text-blue-600 hover:text-blue-900">
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
+                      {view && (
+                        <div className="fixed inset-0 bg-white/50 bg-opacity-50 flex items-center justify-center">
+                          <div className="bg-white p-6 rounded-lg w-96">
+                            <h2 className="text-lg font-bold mb-4">Detail Bookingan</h2>
+                            <p>Ini berisi data view secara lengkap...</p>
+                            <button
+                              onClick={() => setView(false)}
+                              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+                            >
+                              Tutup
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      <button onClick={() => setView(true)}
+                        className="text-green-600 hover:text-green-900">
                         <Edit3 className="h-4 w-4" />
                       </button>
+                      {view && (
+                        <div className="fixed inset-0 bg-white/50 bg-opacity-50 flex items-center justify-center">
+                          <div className="bg-white p-6 rounded-lg w-96">
+                            <h2 className="text-lg font-bold mb-4">Edit Status</h2>
+                            <p>Ini berisi data status yang bisa diubah..</p>
+                            <button
+                              onClick={() => setView(false)}
+                              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+                            >
+                              Tutup
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       <button
                         onClick={() => handleDelete(b.id)}
                         className="text-red-600 hover:text-red-900">
@@ -605,7 +639,22 @@ function ReviewLayout({
 
 export default function KosAdminDashboard() {
 
-  const availableAmenities = ["Wifi", "AC", "Parking", "Coffee", "Restaurant"];
+  const availableAmenities = [
+  "WiFi",
+  "AC",
+  "Kamar Mandi Dalam",
+  "Tempat Tidur",
+  "Lemari",
+  "Meja & Kursi",
+  "Mini Kulkas",
+  "TV",
+  "Laundry",
+  "Dapur Bersama",
+  "Area Jemur",
+  "Parkir Motor/Mobil",
+  "Akses 24 Jam",
+];
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [bookings, setBookings] = useState([]);
@@ -644,6 +693,7 @@ export default function KosAdminDashboard() {
     monthlyRevenue: 0,
     pendingReviews: 0
   });
+  const [view, setView] = useState(false);
 
   //untuk roomtype
   useEffect(() => {
@@ -679,14 +729,14 @@ export default function KosAdminDashboard() {
 
   //untuk format uang
   const formatCurrency = (amount) => {
-  const number = Number(amount);
-  if (isNaN(number)) return "Rp0"; // default kalau bukan angka
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(number);
-};
+    const number = Number(amount);
+    if (isNaN(number)) return "Rp0"; // default kalau bukan angka
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(number);
+  };
 
   //untuk format warna status
   const getStatusColor = (status) => {
@@ -1013,7 +1063,9 @@ export default function KosAdminDashboard() {
         bookings,
         formatCurrency,
         getStatusColor,
-        handleDelete
+        handleDelete,
+        setView,
+        view
       }} />;
       case 'room': return <RoomLayout {...{
         rooms,

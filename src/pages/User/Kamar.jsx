@@ -1,6 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Star, Wifi, Car, Coffee, Utensils, Camera, X, ChevronLeft, ChevronRight, Grid, List, Home, Bed, Bath, MapPin, Loader } from 'lucide-react';
+import {
+  Flame,
+  Star,
+  Wifi,
+  Car,
+  Utensils,
+  Camera,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Grid,
+  List,
+  Home,
+  Bed,
+  Bath,
+  MapPin,
+  Loader,
+  Wind,
+  BedDouble,
+  DoorClosed,
+  Table,
+  Refrigerator,
+  Tv,
+  Shirt,
+  Sun,
+  Clock
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+
 const API_BASE_ROOM = 'http://localhost:5116/api/Room';
 const API_BASE_ROOM_TYPE = "http://localhost:5116/api/roomtype";
 
@@ -98,7 +126,7 @@ const Kamar = () => {
     };
 
     fetchRoomTypes();
-  }, [rooms]); // jangan lupa dependensinya rooms
+  }, [rooms]);
 
   // Filter rooms sesuai tipe yang dipilih
   const filteredRooms = rooms.filter(room => {
@@ -108,11 +136,22 @@ const Kamar = () => {
 
   const getAmenityIcon = (amenity) => {
     const amenityLower = amenity?.toLowerCase();
-    if (amenityLower?.includes('wifi') || amenityLower?.includes('internet')) return <Wifi size={16} />;
-    if (amenityLower?.includes('parking') || amenityLower?.includes('parkir')) return <Car size={16} />;
-    if (amenityLower?.includes('restaurant') || amenityLower?.includes('restoran')) return <Utensils size={16} />;
-    if (amenityLower?.includes('coffee') || amenityLower?.includes('kopi')) return <Coffee size={16} />;
-    return <Star size={16} />;
+
+    if (amenityLower?.includes('wifi') || amenityLower?.includes('internet')) return <Wifi size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('ac')) return <Wind size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('kamar mandi dalam')) return <Bath size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('tempat tidur')) return <BedDouble size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('lemari')) return <DoorClosed size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('meja') || amenityLower?.includes('kursi')) return <Table size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('mini kulkas') || amenityLower?.includes('kulkas')) return <Refrigerator size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('tv')) return <Tv size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('laundry')) return <Shirt size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('dapur bersama')) return <Utensils size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('area jemur')) return <Sun size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('parkir')) return <Car size={16} className="text-rose-600" />;
+    if (amenityLower?.includes('akses 24 jam')) return <Clock size={16} className="text-rose-600" />;
+
+    return <Star size={16} className="text-rose-600" />; // default icon kalau tidak cocok
   };
 
   const getRoomTypeIcon = (typeId) => {
@@ -144,6 +183,10 @@ const Kamar = () => {
   const handleBookingClick = (roomId) => {
     navigate(`/PesananKamar/${roomId}`);
   };
+
+  const handleDetailRoom = (roomId) => {
+    navigate(`/detailRoom/${roomId}`);
+  }
 
   const formatPrice = (price) => {
     if (typeof price === 'number') {
@@ -375,10 +418,19 @@ const Kamar = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                         {/* Overlay Content */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white text-center">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white text-center pointer-events-auto z-50">
                             <Camera className="w-8 h-8 mx-auto mb-2" />
-                            <div className="font-semibold">Lihat Detail</div>
+                            <button
+                              type="button"
+                              className="relative z-50 cursor-pointer pointer-events-auto bg-white/20 p-4 rounded-xl"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openLightbox(room);
+                              }}
+                            >
+                              Lihat Detail
+                            </button>
                           </div>
                         </div>
 
@@ -430,8 +482,7 @@ const Kamar = () => {
 
                         {/* Action Buttons */}
                         <div className="flex gap-3">
-                          <button
-                            onClick={() => openLightbox(room)}
+                          <button onClick={() => handleDetailRoom(room.id)}
                             className="flex-1 bg-white border-2 border-rose-200 text-rose-600 font-semibold py-3 px-4 rounded-xl hover:bg-rose-50 transition-all duration-300"
                           >
                             <span className="flex items-center justify-center">

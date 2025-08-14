@@ -3,16 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Flame, Star, Wifi, Car, Coffee, Utensils, Camera, X, ChevronLeft,
   Calendar, Clock, Users, CreditCard, Check, MapPin, Phone, Mail,
-  Bed, Bath, Home, User, ArrowRight, Loader, AlertCircle, Wallet
+  Bed, Bath, Home, User, ArrowRight, Loader, AlertCircle, Wallet,
+  Wind, DoorClosed, Table, Refrigerator, Tv, Shirt, Sun, BedDouble,
+  Snowflake, WashingMachine,CookingPot,KeyRound
 } from 'lucide-react';
 
 const API_BASE_ROOM = 'http://localhost:5116/api/Room';
+const API_BASE_ROOM_TYPE = "http://localhost:5116/api/roomtype";
 
 function DetailKamar({
   room,
   formatPrice,
-  getRoomType,
   getAmenityIcon,
+  getRoomType
 }) {
   return (
     <div className="p-8">
@@ -51,7 +54,7 @@ function DetailKamar({
             <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
               <Bed className="w-4 h-4" />
             </div>
-            <span className="font-semibold text-stone-700">{getRoomType(room.name)}</span>
+            <span className="font-semibold text-stone-700"> {getRoomType(room.roomType?.name || room.name)}</span>
           </div>
         </div>
 
@@ -76,8 +79,6 @@ function DetailKamar({
             )}
           </div>
         </div>
-
-
       </div>
     </div>
   );
@@ -158,17 +159,25 @@ const PesananKamar = () => {
 
   const getAmenityIcon = (amenity) => {
     const amenityLower = amenity?.toLowerCase();
-    if (amenityLower?.includes('wifi') || amenityLower?.includes('internet')) return <Wifi size={16} />;
-    if (amenityLower?.includes('parking') || amenityLower?.includes('parkir')) return <Car size={16} />;
-    if (amenityLower?.includes('restaurant') || amenityLower?.includes('restoran')) return <Utensils size={16} />;
-    if (amenityLower?.includes('coffee') || amenityLower?.includes('kopi')) return <Coffee size={16} />;
+
+    if (amenityLower.includes("wifi")) return <Wifi size={16} />;
+    if (amenityLower.includes("ac")) return <Snowflake size={16} />;
+    if (amenityLower.includes("kamar mandi")) return <Bath size={16} />;
+    if (amenityLower.includes("tempat tidur")) return <BedDouble size={16} />;
+    if (amenityLower.includes("lemari")) return <Refrigerator size={16} />;
+    if (amenityLower.includes("tv")) return <Tv size={16} />;
+    if (amenityLower.includes("laundry")) return <WashingMachine size={16} />;
+    if (amenityLower.includes("dapur")) return <CookingPot size={16} />;
+    if (amenityLower.includes("parkir")) return <Car size={16} />;
+    if (amenityLower.includes("akses 24 jam")) return <KeyRound size={16} />;
+
     return <Star size={16} />;
   };
 
   const getRoomType = (roomName) => {
     if (!roomName) return 'Standard';
     const name = roomName.toLowerCase();
-    if (name.includes('premium')) return 'Premium';
+    if (name.includes('vip')) return 'VIP';
     if (name.includes('deluxe')) return 'Deluxe';
     return 'Standard';
   };
@@ -352,6 +361,7 @@ const PesananKamar = () => {
   ];
 
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-stone-50">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -446,6 +456,7 @@ const PesananKamar = () => {
                       formatPrice={formatPrice}
                       getRoomType={getRoomType}
                       getAmenityIcon={getAmenityIcon}
+
                     />
 
                     <div className="flex justify-end mt-8">
