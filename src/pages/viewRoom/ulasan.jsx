@@ -28,7 +28,6 @@ import {
   WashingMachine,
   CookingPot,
   KeyRound,
-
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -246,7 +245,7 @@ function DetailKamarLayout({
 
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6">
-            {/* Booking Card - Removed sticky positioning */}
+            {/* Booking Card */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-stone-100">
               <div className="text-center mb-6">
                 <div className="text-3xl font-bold text-stone-800 mb-2">
@@ -265,7 +264,7 @@ function DetailKamarLayout({
                 </div>
               </div>
 
-              {/* Features - Fixed version with better spacing */}
+              {/* Features */}
               <div className="space-y-3 mb-6">
                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-stone-50 to-stone-100 rounded-xl border border-stone-200 hover:shadow-sm transition-shadow">
                   <span className="text-stone-600 flex items-center">
@@ -591,8 +590,8 @@ const DetailKamar = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [roomTypes, setRoomTypes] = useState([]);
-  const [selectedRoomType, setSelectedRoomType] = useState('all');
   const [reviews, setReviews] = useState([]);
+
   // Review form states
   const [newReview, setNewReview] = useState({
     roomId: parseInt(roomId),
@@ -602,25 +601,21 @@ const DetailKamar = () => {
     comment: "",
     image: null,
   });
+
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [userName, setUserName] = useState("");
   const [averageRating, setAverageRating] = useState(0);
   const [ratingDistribution, setRatingDistribution] = useState([]);
 
-  //untuk mengambil data kamar
+  // Ambil data kamar
   useEffect(() => {
-    const fetchRoom = async () => {
+    const fetchRoomDetail = async () => {
       try {
         setLoading(true);
-        setError(null);
-        const response = await fetch(`${API_BASE_ROOM}/${roomId}`);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const res = await fetch(`${API_BASE_ROOM}/${roomId}`);
+        if (!res.ok) throw new Error("Gagal memuat data kamar");
+        const data = await res.json();
         setRoom(data);
       } catch (err) {
         setError(err.message);
@@ -628,60 +623,18 @@ const DetailKamar = () => {
         setLoading(false);
       }
     };
-    if (roomId) {
-      fetchRoom();
-    }
-  }, [roomId]);
 
-  useEffect(() => {
-    //untuk mengambil tipe kamar
     const fetchRoomTypes = async () => {
       try {
-        const response = await fetch(API_BASE_ROOM_TYPE);
-        const data = await response.json();
-        const values = data?.$values ?? [];
-
-        // Get all rooms to count by type
-        const roomsResponse = await fetch(API_BASE_ROOM);
-        const roomsData = await roomsResponse.json();
-        let allRooms = [];
-
-        if (Array.isArray(roomsData)) {
-          allRooms = roomsData;
-        } else if (roomsData && Array.isArray(roomsData.$values)) {
-          allRooms = roomsData.$values;
-        }
-
-        const countsByType = {};
-        allRooms.forEach(room => {
-          const typeId = room.roomTypeId;
-          if (typeId) {
-            countsByType[typeId] = (countsByType[typeId] || 0) + 1;
-          }
-        });
-
-        const parsed = values.map(item => ({
-          id: item.roomTypeId,
-          name: item.name,
-          count: countsByType[item.roomTypeId] || 0
-        }));
-
-        const total = allRooms.length;
-
-        parsed.unshift({
-          id: 'all',
-          name: 'Semua Kamar',
-          count: total,
-        });
-
-        setRoomTypes(parsed);
-      } catch (error) {
-        console.error('Error fetching room types:', error);
-        setError(error.message);
+        const res = await fetch(API_BASE_ROOM_TYPE);
+        if (!res.ok) throw new Error("Gagal memuat data tipe kamar");
+        const data = await res.json();
+        setRoomTypes(data.$values || []);
+      } catch (err) {
+        console.error(err);
       }
     };
 
-    //untuk mengambil review per kamar
     const fetchReviews = async () => {
       try {
         const res = await fetch(`${API_BASE_REVIEW}/room/${roomId}`);
@@ -707,9 +660,44 @@ const DetailKamar = () => {
       }
     };
 
+    fetchRoomDetail();
     fetchRoomTypes();
     fetchReviews();
   }, [roomId]);
+
+  const formatPrice = (price) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    }).format(price);
+
+  const getRoomTypeIcon = (roomTypeId) => {
+    const type = roomTypes.find((t) => t.id === roomTypeId);
+    if (!type) return <Home className="w-5 h-5" />;
+    switch (type.name?.toLowerCase()) {
+      case "deluxe":
+        return <BedDouble className="w-5 h-5" />;
+      case "standard":
+        return <Bed className="w-5 h-5" />;
+      default:
+        return <Home className="w-5 h-5" />;
+    }
+  };
+
+  const getAmenityIcon = (amenityName) => {
+    const name = amenityName?.toLowerCase();
+    if (name.includes("wifi")) return <Wifi className="w-5 h-5" />;
+    if (name.includes("ac")) return <Snowflake className="w-5 h-5" />;
+    if (name.includes("tv")) return <Tv className="w-5 h-5" />;
+    if (name.includes("meja")) return <Table className="w-5 h-5" />;
+    if (name.includes("lemari")) return <Shirt className="w-5 h-5" />;
+    if (name.includes("parkir")) return <Car className="w-5 h-5" />;
+    return <Check className="w-5 h-5" />;
+  };
+
+  const handleBookingClick = (roomId) => {
+    navigate(`/booking/${roomId}`);
+  };
 
   const handleChange = (e) => {
     setNewReview({
@@ -725,7 +713,6 @@ const DetailKamar = () => {
     });
   };
 
-  //untuk handle mengirimkan ulasan user
   const handleSubmitReview = async () => {
     try {
       const formData = new FormData();
@@ -764,111 +751,32 @@ const DetailKamar = () => {
     }
   };
 
-  //mengambil icon fari tipe kamar
-  const getRoomTypeIcon = (typeId) => {
-    if (typeId === 'all') return <Camera className="w-5 h-5" />;
-
-    switch (typeId) {
-      case 1: return <Home className="w-5 h-5" />;
-      case 2: return <Bed className="w-5 h-5" />;
-      case 3: return <Bath className="w-5 h-5" />;
-      default: return <Camera className="w-5 h-5" />;
-    }
-  };
-
-  //untuk mengarahkan ke halaman pesan (jika ingin lanjut ke pesan kamar)
-  const handleBookingClick = (roomId) => {
-    navigate(`/PesananKamar/${roomId}`);
-  };
-
-  //untuk harga tapi sepertinya tidak digunakan
-  const formatPrice = (price) => {
-    if (typeof price === 'number') {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(price);
-    }
-    return price || 'Hubungi Kami';
-  };
-
-  //untuk fasilitas Icon
-  const getAmenityIcon = (amenity) => {
-    const amenityLower = amenity?.toLowerCase();
-
-    if (amenityLower.includes("wifi")) return <Wifi size={16} />;
-    if (amenityLower.includes("ac")) return <Snowflake size={16} />;
-    if (amenityLower.includes("kamar mandi")) return <Bath size={16} />;
-    if (amenityLower.includes("tempat tidur")) return <BedDouble size={16} />;
-    if (amenityLower.includes("lemari")) return <Refrigerator size={16} />;
-    if (amenityLower.includes("tv")) return <Tv size={16} />;
-    if (amenityLower.includes("laundry")) return <WashingMachine size={16} />;
-    if (amenityLower.includes("dapur")) return <CookingPot size={16} />;
-    if (amenityLower.includes("parkir")) return <Car size={16} />;
-    if (amenityLower.includes("akses 24 jam")) return <KeyRound size={16} />;
-
-    return <Star size={16} />;
-  };
-
-  //jika sedang loading atau mengambil data kamar dari backend
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-stone-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin text-rose-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-stone-800 mb-2">Memuat Data Kamar</h2>
-          <p className="text-stone-600">Sedang mengambil informasi kamar...</p>
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <Loader className="animate-spin w-8 h-8 text-gray-500" />
       </div>
     );
   }
 
-  //jika halaman error/ mengalami gangguan
-  if (error || !room) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-stone-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8" />
-          </div>
-          <h2 className="text-2xl font-bold text-stone-800 mb-2">Kamar Tidak Ditemukan</h2>
-          <p className="text-stone-600 mb-4">{error || 'Data kamar tidak dapat ditemukan'}</p>
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={() => navigate('/')}
-              className="bg-rose-500 text-white px-6 py-3 rounded-xl hover:bg-rose-600 transition-colors"
-            >
-              Kembali ke Beranda
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-white border-2 border-stone-300 text-stone-700 px-6 py-3 rounded-xl hover:bg-stone-50 transition-colors"
-            >
-              Coba Lagi
-            </button>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-screen text-red-500">
+        <AlertCircle className="w-6 h-6 mr-2" /> {error}
       </div>
     );
   }
 
-  //melakukam pemanggilan fungsi dari detail kamar dan review
   return (
-    <>
+    <div>
       <DetailKamarLayout
         room={room}
-        formatPrice={formatPrice}
         getRoomTypeIcon={getRoomTypeIcon}
+        formatPrice={formatPrice}
         getAmenityIcon={getAmenityIcon}
         handleBookingClick={handleBookingClick}
-        roomTypes={roomTypes}
-        selectedRoomType={selectedRoomType}
-        setSelectedRoomType={setSelectedRoomType}
       />
-
-       <ReviewLayout
+      <ReviewLayout
         reviews={reviews}
         newReview={newReview}
         setNewReview={setNewReview}
@@ -884,7 +792,7 @@ const DetailKamar = () => {
         averageRating={averageRating}
         ratingDistribution={ratingDistribution}
       />
-    </>
+    </div>
   );
 };
 

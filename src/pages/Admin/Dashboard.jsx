@@ -45,7 +45,7 @@ function RoomLayout({
   setShowFormType,
   showFormType,
   roomTypes,
-  availableAmenities
+  availableAmenities,
 }) {
   return (
     <div className="space-y-6 p-4">
@@ -572,7 +572,9 @@ function BookingLayout({
 }
 
 function ReviewLayout({
-  reviews
+  reviews,
+  handleReplyReview,
+  handleDeleteReview
 }) {
   return (
     <div className="space-y-6">
@@ -622,10 +624,14 @@ function ReviewLayout({
               </div>
               <p className="text-gray-700 mb-4">{review.comment}</p>
               <div className="flex gap-2">
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                <button
+                  onClick={handleReplyReview}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                   Balas Review
                 </button>
-                <button className="text-red-600 hover:text-red-800 text-sm font-medium">
+                <button
+                  onClick={handleDeleteReview}
+                  className="text-red-600 hover:text-red-800 text-sm font-medium">
                   Hapus
                 </button>
               </div>
@@ -640,20 +646,20 @@ function ReviewLayout({
 export default function KosAdminDashboard() {
 
   const availableAmenities = [
-  "WiFi",
-  "AC",
-  "Kamar Mandi Dalam",
-  "Tempat Tidur",
-  "Lemari",
-  "Meja & Kursi",
-  "Mini Kulkas",
-  "TV",
-  "Laundry",
-  "Dapur Bersama",
-  "Area Jemur",
-  "Parkir Motor/Mobil",
-  "Akses 24 Jam",
-];
+    "WiFi",
+    "AC",
+    "Kamar Mandi Dalam",
+    "Tempat Tidur",
+    "Lemari",
+    "Meja & Kursi",
+    "Mini Kulkas",
+    "TV",
+    "Laundry",
+    "Dapur Bersama",
+    "Area Jemur",
+    "Parkir Motor/Mobil",
+    "Akses 24 Jam",
+  ];
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -938,6 +944,14 @@ export default function KosAdminDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleReplyReview = async () => {
+    alert("tombol balas di klik");
+  };
+
+  const handleDeleteReview = async () => {
+    alert("tombol hapus di tekan");
+  };
+
   // Update dashboard data when other data changes
   useEffect(() => {
     const validRooms = Array.isArray(rooms) ? rooms : [];
@@ -1085,7 +1099,9 @@ export default function KosAdminDashboard() {
         availableAmenities,
       }} />;
       case 'review': return <ReviewLayout{...{
-        reviews
+        reviews,
+        handleReplyReview,
+        handleDeleteReview
       }} />;
       case 'gallery': return <GalleryLayout{...{
         loading,
