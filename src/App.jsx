@@ -9,8 +9,6 @@ import Gallery from './pages/User/Gallery'
 import PesananKamar from './pages/Boking/PesananKamar'
 import DetailKamar from './pages/viewRoom/detailRoom'
 import EnhancedKosanHomepage from './pages/User/Home'
-import CardBooking from './pages/User/coba'
-import Ulasan from './pages/viewRoom/ulasan'
 
 function App() {
 
@@ -18,11 +16,8 @@ function App() {
     <>
       <Navbar />
       <Routes>
-
-        {/* <Route path='/' element={<CardBooking />} /> */}
         {/* <Route path='/' element={<EnhancedKosanHomepage />} /> */}
         <Route path='/' element={<KosAdminDashboard/>} />
-        
         <Route path='/Kamar' element={<Kamar />} />
         <Route path='/Gallery' element={<Gallery />} />
         <Route path="/PesananKamar/:roomId" element={<PesananKamar />} />

@@ -87,7 +87,7 @@ function DetailKamarLayout({
           <div className="absolute bottom-6 right-6">
             <div className="rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 px-6 py-4 text-white shadow-2xl backdrop-blur-sm">
               <div className="text-sm font-medium opacity-90">Mulai dari</div>
-              <div className="text-2xl font-bold">{formatPrice(room.price)}</div>
+              <div className="text-2xl font-bold">{formatPrice(room.pricePerNight)}</div>
               <div className="text-sm opacity-80">per malam</div>
             </div>
           </div>

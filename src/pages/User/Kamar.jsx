@@ -492,8 +492,15 @@ const Kamar = () => {
                           </button>
                           <button
                             onClick={() => handleBookingClick(room.id)}
-                            className="flex-1 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                            disabled={!room.isAvailable}
+                            className={`flex-1 overflow-hidden group rounded-2xl ${room.isAvailable
+                              ? 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg'
+                              : 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                              }`}
                           >
+                            {room.isAvailable && (
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                            )}
                             <span className="flex items-center justify-center">
                               <Flame size={18} className="mr-2" />
                               Pesan

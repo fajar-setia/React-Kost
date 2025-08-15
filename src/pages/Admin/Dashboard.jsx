@@ -28,6 +28,7 @@ const API_BASE_REVIEW = "http://localhost:5116/api/Review";
 const API_BASE_BOOKING = "http://localhost:5116/api/booking";
 const API_BASE_ROOMTYPE = "http://localhost:5116/api/roomType";
 const API_BASE_ALLGALLERY = "http://localhost:5116/api/gallery";
+const API_BASE_RESPOND = "http://localhost:5116/api/review/respond";
 
 
 function RoomLayout({
@@ -574,7 +575,12 @@ function BookingLayout({
 function ReviewLayout({
   reviews,
   handleReplyReview,
-  handleDeleteReview
+  handleDeleteReview,
+  respond,
+  setRespond,
+  respondData = { reviewId: "", replyText: "" },
+  setRespondData = () => { },
+  openRespondModal
 }) {
   return (
     <div className="space-y-6">
@@ -625,10 +631,37 @@ function ReviewLayout({
               <p className="text-gray-700 mb-4">{review.comment}</p>
               <div className="flex gap-2">
                 <button
-                  onClick={handleReplyReview}
+                  onClick={() => openRespondModal(review.id)}
                   className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                   Balas Review
                 </button>
+                {respond && respondData.reviewId === review.id && (
+                  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                      <h2 className="text-lg font-bold mb-4">Balas Review</h2>
+                      <p className="text-sm text-gray-500 mb-2">
+                        Dari: {review.customerName} ({review.customerEmail})
+                      </p>
+                      <textarea
+                        className="w-full border p-2 rounded"
+                        rows={4}
+                        placeholder="Tulis balasan admin di sini..."
+                        value={respondData?.replyText ?? ""}
+                        onChange={(e) =>
+                          setRespondData(prev => ({ ...prev, replyText: e.target.value }))
+                        }
+                      />
+                      <div className="flex justify-end gap-2 mt-3">
+                        <button onClick={() => setRespond(false)} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
+                          Batal
+                        </button>
+                        <button onClick={handleReplyReview} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                          Kirim
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={handleDeleteReview}
                   className="text-red-600 hover:text-red-800 text-sm font-medium">
@@ -700,6 +733,11 @@ export default function KosAdminDashboard() {
     pendingReviews: 0
   });
   const [view, setView] = useState(false);
+  const [respond, setRespond] = useState(false);
+  const [respondData, setRespondData] = useState({
+    reviewId: "",
+    replyText: ""
+  });
 
   //untuk roomtype
   useEffect(() => {
@@ -821,7 +859,7 @@ export default function KosAdminDashboard() {
     }
   };
 
-  //untuk gallery
+  //untuk mengambil data dari gallery
   useEffect(() => {
     fetch(API_BASE_ALLGALLERY)
       .then(res => res.json())
@@ -838,6 +876,7 @@ export default function KosAdminDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  //untuk tombol upload gallery
   const handleUploadGallery = async (e) => {
     e.preventDefault();
 
@@ -945,7 +984,36 @@ export default function KosAdminDashboard() {
   }, []);
 
   const handleReplyReview = async () => {
-    alert("tombol balas di klik");
+    try {
+      if (!respondData.reviewId) {
+        alert("ReviewId kosong.");
+        return;
+      }
+      const res = await fetch(`http://localhost:5116/api/review/respond/${respondData.reviewId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isAddressed: true,
+          adminResponse: respondData.replyText
+        })
+      });
+
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Gagal mengirim balasan");
+      }
+
+      alert("Balasan berhasil dikirim!");
+      setRespond(false);
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+
+  const openRespondModal = (id) => {
+    setRespondData({ reviewId: id, replyText: "" });
+    setRespond(true);
   };
 
   const handleDeleteReview = async () => {
@@ -1079,7 +1147,7 @@ export default function KosAdminDashboard() {
         getStatusColor,
         handleDelete,
         setView,
-        view
+        view,
       }} />;
       case 'room': return <RoomLayout {...{
         rooms,
@@ -1101,7 +1169,12 @@ export default function KosAdminDashboard() {
       case 'review': return <ReviewLayout{...{
         reviews,
         handleReplyReview,
-        handleDeleteReview
+        openRespondModal,
+        handleDeleteReview,
+        respond,
+        setRespond,
+        setRespondData,
+        respondData
       }} />;
       case 'gallery': return <GalleryLayout{...{
         loading,
