@@ -220,7 +220,7 @@ export default function KosGallery() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto">
               <div className="text-center">
                 <div className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  {gallery.length}+
+                  {gallery.length}
                 </div>
                 <div className="text-stone-600 font-medium">Foto HD</div>
               </div>

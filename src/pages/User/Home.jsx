@@ -4,15 +4,28 @@ import 'aos/dist/aos.css';
 import { MapPin, Wifi, Bath, Phone, Eye, DollarSign, CheckCircle, Star, Shield, Clock, Users, Heart, Award, Home, Camera, Calendar, ArrowRight, Play, ChevronLeft, ChevronRight, Sparkles, Zap, Coffee, Car } from 'lucide-react';
 import gambarr from '../../assets/bg/heroSection.png'
 import 'animate.css';
+import { useNavigate } from 'react-router-dom';
 
 
 const API_BASE_BOOKING = "http://localhost:5116/api/booking";
+const API_BASE_ROOM = 'http://localhost:5116/api/Room';
 
 
 export default function EnhancedKosanHomepage() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [totalPengguna, setTotalPengguna] = useState(0);
+  const navigate = useNavigate();
+
+
+  // Ini fungsi yang akan dipanggil saat tombol filter ditekan
+  // Tambahkan onClick ke setiap tombol filter Anda
+  
+
+  const handleNavigateToRooms = (roomType) => {
+    // Navigasi langsung dengan tipe kamar yang diinginkan
+    navigate(`/kamar?type=${roomType}`);
+  };
 
   useEffect(() => {
     setIsVisible(true);
@@ -176,12 +189,14 @@ export default function EnhancedKosanHomepage() {
     setCurrentSlide((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-stone-50">
       {/* Enhanced Hero Section */}
       <section id="home" className="relative pt-32 pb-24 overflow-hidden min-h-screen flex items-center shadow-2xl bg-gradient-to-r from-white via-white to-rose-700">
-        <div className="absolute left-0 w-[50%] h-full pointer-events-none z-0 bg-gradient-to-r from-rose-700/60 via-white to-white"/>
-        
+        <div className="absolute left-0 w-[50%] h-full pointer-events-none z-0 bg-gradient-to-r from-rose-700/60 via-white to-white" />
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Enhanced Left Content */}
@@ -423,21 +438,19 @@ export default function EnhancedKosanHomepage() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Tombol selalu di bawah */}
-                  <div className="mt-8">
-                    <button
-                      onClick={() => {
-                        alert(`Memilih kamar ${room.type}. Lanjut ke pemesanan...`);
-                      }}
-                      className="w-full relative py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform group-hover:scale-105"
-                    >
-                      Pilih Kamar
-                      <ArrowRight className="absolute right-6 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </button>
+                    {/* Tombol "Pilih Kamar" */}
+                    <div className="mt-8">
+                      <div className="p-4">
+                        <button
+                          onClick={() => handleNavigateToRooms(room.type)} // Ini yang akan menjalankan navigasi
+                          className="w-full relative py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                        >
+                          Pilih Kamar
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </div>      
             ))}
           </div>
         </div>

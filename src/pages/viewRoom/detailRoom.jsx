@@ -43,6 +43,7 @@ function DetailKamarLayout({
   formatPrice,
   getAmenityIcon,
   handleBookingClick,
+  reviews // Tambahkan reviews sebagai prop
 }) {
   if (!room) {
     return (
@@ -57,6 +58,23 @@ function DetailKamarLayout({
       </div>
     );
   }
+
+  // Perbaiki perhitungan rating dari reviews dengan safety checks
+  const totalReviews = Array.isArray(reviews) ? reviews.length : 0;
+
+  const averageRating = totalReviews > 0
+    ? reviews.reduce((sum, review) => {
+      // Safety check: pastikan review dan rating ada
+      if (review && typeof review.rating === 'number' && !isNaN(review.rating)) {
+        return sum + review.rating;
+      }
+      return sum;
+    }, 0) / totalReviews
+    : 0;
+
+  // Pastikan ratingDistribution ada dan valid
+  // const safeRatingDistribution = Array.isArray(ratingDistribution) ? ratingDistribution : [];
+  // console.log("ini isi safe rating", safeRatingDistribution);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-rose-50 pt-30">
@@ -121,21 +139,26 @@ function DetailKamarLayout({
                     {room.name}
                   </h1>
                   <div className="flex items-center space-x-4 mb-4">
+                    {/* Rating Display - Diperbaiki dengan safety checks */}
                     <div className="flex items-center space-x-1">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
                           size={18}
-                          className={`${i < (room.rating || 0)
+                          className={`${i < Math.round(averageRating || 0)
                             ? 'text-yellow-400 fill-current'
                             : 'text-stone-300'
                             } transition-colors`}
                         />
                       ))}
                       <span className="text-sm font-medium text-stone-600 ml-2">
-                        {room.rating || 0}/5
+                        {totalReviews > 0 && averageRating > 0 ? `${averageRating.toFixed(1)}/5` : '0/5'}
+                      </span>
+                      <span className="text-xs text-stone-500">
+                        ({totalReviews} ulasan)
                       </span>
                     </div>
+
                     <div className="flex items-center text-stone-500">
                       <MapPin className="h-4 w-4 mr-1" />
                       <span className="text-sm">kos-kosan</span>
@@ -216,31 +239,42 @@ function DetailKamarLayout({
                   <span>{room.roomType?.name || "Standard"}</span>
                 </h2>
               </div>
-              {Array.isArray(room.amenities?.$values) && room.amenities.$values.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {room.amenities.$values.map((amenity, index) => (
-                    <div
-                      key={index}
-                      className="group flex items-center gap-4 p-4 rounded-xl border border-stone-200 bg-gradient-to-r from-stone-50 to-white hover:from-rose-50 hover:to-pink-50 hover:border-rose-300 transition-all duration-300 hover:shadow-md"
-                    >
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center group-hover:from-rose-200 group-hover:to-pink-200 transition-colors">
-                        {getAmenityIcon(amenity.name)}
+              {(() => {
+                // 🔑 Normalisasi data amenities
+                const amenities = Array.isArray(room.amenities)
+                  ? room.amenities
+                  : Array.isArray(room.amenities?.$values)
+                    ? room.amenities.$values
+                    : [];
+
+                return amenities.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {amenities.map((amenity, index) => (
+                      <div
+                        key={index}
+                        className="group flex items-center gap-4 p-4 rounded-xl border border-stone-200 bg-gradient-to-r from-stone-50 to-white hover:from-rose-50 hover:to-pink-50 hover:border-rose-300 transition-all duration-300 hover:shadow-md"
+                      >
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center group-hover:from-rose-200 group-hover:to-pink-200 transition-colors">
+                          {getAmenityIcon(amenity.name)}
+                        </div>
+                        <span className="font-medium text-stone-700 group-hover:text-rose-700 transition-colors">
+                          {amenity.name}
+                        </span>
                       </div>
-                      <span className="font-medium text-stone-700 group-hover:text-rose-700 transition-colors">
-                        {amenity.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-stone-100 flex items-center justify-center">
-                    <Coffee className="w-10 h-10 text-stone-400" />
+                    ))}
                   </div>
-                  <p className="text-stone-500 text-lg">Fasilitas akan segera tersedia</p>
-                  <p className="text-stone-400 text-sm mt-2">Tim kami sedang mempersiapkan informasi lengkap</p>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-stone-100 flex items-center justify-center">
+                      <Coffee className="w-10 h-10 text-stone-400" />
+                    </div>
+                    <p className="text-stone-500 text-lg">Fasilitas akan segera tersedia</p>
+                    <p className="text-stone-400 text-sm mt-2">
+                      Tim kami sedang mempersiapkan informasi lengkap
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -250,7 +284,7 @@ function DetailKamarLayout({
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-stone-100">
               <div className="text-center mb-6">
                 <div className="text-3xl font-bold text-stone-800 mb-2">
-                  {formatPrice(room.price)}
+                  {formatPrice(room.price || room.pricePerNight)}
                 </div>
                 <p className="text-stone-500">per malam</p>
               </div>
@@ -565,11 +599,22 @@ function ReviewLayout({
                           day: 'numeric'
                         })}
                       </p>
+                      {review.adminResponse && (
+                        <div className="flex mt-3 justify-end">
+                          <div className="max-w-xs bg-white text-white px-4 py-2 rounded-2xl shadow-md relative">
+                            <span className="absolute -top-3 right-2 text-xs bg-gray-700 px-2 py-0.5 rounded-full shadow-2xl">
+                              Balasan Admin Kos
+                            </span>
+                            <p className="text-sm leading-relaxed text-black">{review.adminResponse}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+
           ) : (
             <div className="text-center py-8">
               <Star className="w-12 h-12 text-gray-300 mx-auto mb-2" />
@@ -675,30 +720,42 @@ const DetailKamar = () => {
         });
 
         setRoomTypes(parsed);
+
       } catch (error) {
         console.error('Error fetching room types:', error);
         setError(error.message);
       }
     };
 
+    // helper untuk normalisasi respons .NET
+    const toArray = (payload) =>
+      Array.isArray(payload) ? payload : (Array.isArray(payload?.$values) ? payload.$values : []);
+
     //untuk mengambil review per kamar
     const fetchReviews = async () => {
       try {
         const res = await fetch(`${API_BASE_REVIEW}/room/${roomId}`);
-        if (!res.ok) throw new Error("Gagal memuat ulasan");
-        const data = await res.json();
-        setReviews(data.$values || []);
 
-        if (data.$values?.length > 0) {
-          const avg =
-            data.$values.reduce((sum, r) => sum + r.rating, 0) /
-            data.$values.length;
+        if (res.status === 404) {        // kalau endpoint balikin NotFound
+          setReviews([]);
+          setAverageRating(0);
+          setRatingDistribution([5, 4, 3, 2, 1].map(r => ({ rating: r, count: 0, percentage: 0 })));
+          return;
+        }
+        if (!res.ok) throw new Error("Gagal memuat ulasan");
+
+        const data = await res.json();
+        const arr = toArray(data);
+
+        setReviews(arr);
+
+        if (arr.length) {
+          const avg = arr.reduce((s, r) => s + Number(r.rating || 0), 0) / arr.length;
           setAverageRating(avg);
 
           const dist = [5, 4, 3, 2, 1].map((r) => {
-            const count = data.$values.filter((rev) => rev.rating === r).length;
-            const percentage = (count / data.$values.length) * 100;
-            return { rating: r, count, percentage };
+            const count = arr.filter(x => Number(x.rating) === r).length;
+            return { rating: r, count, percentage: (count / arr.length) * 100 };
           });
           setRatingDistribution(dist);
         }
@@ -709,6 +766,10 @@ const DetailKamar = () => {
 
     fetchRoomTypes();
     fetchReviews();
+
+    const interval = setInterval(fetchReviews, 5000);
+    // Cleanup saat unmount
+    return () => clearInterval(interval);
   }, [roomId]);
 
   const handleChange = (e) => {
@@ -743,12 +804,17 @@ const DetailKamar = () => {
         body: formData,
       });
 
+
       if (!res.ok) throw new Error("Gagal mengirim ulasan");
 
       // Refresh ulasan
       const updatedReviews = await fetch(`${API_BASE_REVIEW}/room/${roomId}`);
-      const data = await updatedReviews.json();
-      setReviews(data.$values || []);
+
+      const data = await updatedReviews.json().catch(err => {
+        console.error("Gagal parsing JSON:", err);
+        return null;
+      });
+      console.log("Hasil API:", data);
 
       // Reset form
       setUserName("");
@@ -866,9 +932,11 @@ const DetailKamar = () => {
         roomTypes={roomTypes}
         selectedRoomType={selectedRoomType}
         setSelectedRoomType={setSelectedRoomType}
+        ratingDistribution={ratingDistribution}
+        reviews={reviews}
       />
 
-       <ReviewLayout
+      <ReviewLayout
         reviews={reviews}
         newReview={newReview}
         setNewReview={setNewReview}

@@ -19,7 +19,8 @@ import {
   X,
   Eye,
   ChevronDown,
-  Type
+  Type,
+  MessageSquare
 } from 'lucide-react';
 
 const API_BASE_ROOM = 'http://localhost:5116/api/Room';
@@ -574,104 +575,154 @@ function BookingLayout({
 
 function ReviewLayout({
   reviews,
+  rooms,
   handleReplyReview,
   handleDeleteReview,
   respond,
   setRespond,
   respondData = { reviewId: "", replyText: "" },
   setRespondData = () => { },
-  openRespondModal
+  openRespondModal,
+  currentPage,
+  reviewsPerPage,
+  paginate,
 }) {
+  const [openRooms, setOpenRooms] = React.useState([]);
+
+  const toggleRoom = (roomId) => {
+    setOpenRooms((prev) =>
+      prev.includes(roomId) ? prev.filter((id) => id !== roomId) : [...prev, roomId]
+    );
+  };
+
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+
+  const roomsInPage = Array.from(new Set(currentReviews.map(r => r.roomId)));
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Manajemen Review</h2>
-      </div>
+      <h2 className="text-2xl font-bold text-gray-900">Manajemen Review</h2>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari review..."
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              <option>Semua Rating</option>
-              <option>5 Bintang</option>
-              <option>4 Bintang</option>
-              <option>3 Bintang</option>
-              <option>2 Bintang</option>
-              <option>1 Bintang</option>
-            </select>
-          </div>
+        {/* Filter */}
+        <div className="p-6 border-b border-gray-200 flex gap-4">
+          <input
+            type="text"
+            placeholder="Cari review..."
+            className="pl-4 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option>Semua Rating</option>
+            <option>5 Bintang</option>
+            <option>4 Bintang</option>
+            <option>3 Bintang</option>
+            <option>2 Bintang</option>
+            <option>1 Bintang</option>
+          </select>
         </div>
 
-        <div className="divide-y divide-gray-200">
-          {reviews.map(review => (
-            <div key={review.id} className="p-6">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h4 className="font-medium text-gray-900">{review.guestName}</h4>
-                  <p className="text-sm text-gray-500">Kamar {review.roomId} • {review.date}</p>
+        {/* Card Kamar */}
+        <div className="bg-white rounded-b-xl divide-y divide-gray-200">
+          {roomsInPage.map(roomId => {
+            const roomReviews = currentReviews.filter(r => r.roomId === roomId);
+            const room = rooms.find(r => r.id === roomId);
+            const roomName = room ? room.name : `Kamar ${roomId}`;
+            const isOpen = openRooms.includes(roomId);
+
+            return (
+              <div key={roomId} className="p-6">
+                <div
+                  className="flex justify-between items-center cursor-pointer"
+                  onClick={() => toggleRoom(roomId)}
+                >
+                  <h3 className="text-lg font-semibold text-gray-800">Ulasan untuk {roomName}</h3>
+                  <span className="text-gray-500">{isOpen ? "▲" : "▼"}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                    />
-                  ))}
-                  <span className="ml-2 text-sm font-medium">{review.rating}/5</span>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">{review.comment}</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => openRespondModal(review.id)}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                  Balas Review
-                </button>
-                {respond && respondData.reviewId === review.id && (
-                  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                      <h2 className="text-lg font-bold mb-4">Balas Review</h2>
-                      <p className="text-sm text-gray-500 mb-2">
-                        Dari: {review.customerName} ({review.customerEmail})
-                      </p>
-                      <textarea
-                        className="w-full border p-2 rounded"
-                        rows={4}
-                        placeholder="Tulis balasan admin di sini..."
-                        value={respondData?.replyText ?? ""}
-                        onChange={(e) =>
-                          setRespondData(prev => ({ ...prev, replyText: e.target.value }))
-                        }
-                      />
-                      <div className="flex justify-end gap-2 mt-3">
-                        <button onClick={() => setRespond(false)} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
-                          Batal
-                        </button>
-                        <button onClick={handleReplyReview} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                          Kirim
-                        </button>
+
+                {isOpen && roomReviews.map(review => (
+                  <div key={review.id} className="border-b border-gray-200 pb-4 mb-4 last:border-0 last:mb-0">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{review.customerName}</h4>
+                        {review.customerEmail && <p className="text-xs text-gray-500">{review.customerEmail}</p>}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={`${review.id}-star-${i}`}
+                            className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                          />
+                        ))}
+                        <span className="ml-2 text-sm font-medium">{review.rating}/5</span>
                       </div>
                     </div>
+
+                    <p className="text-gray-700 mb-2">{review.comment}</p>
+
+                    {review.adminResponse && (
+                      <div className="mt-1 p-2 text-sm bg-blue-50 border-l-4 border-blue-200 text-blue-800 rounded">
+                        <span className="font-semibold">Balasan Admin:</span> {review.adminResponse}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => openRespondModal(review.id, review.adminResponse)}
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        <MessageSquare size={16} /> Balas Review
+                      </button>
+                      <button
+                        onClick={() => handleDeleteReview(review.id)}
+                        className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        <Trash2 size={16} /> Hapus
+                      </button>
+                    </div>
                   </div>
-                )}
-                <button
-                  onClick={handleDeleteReview}
-                  className="text-red-600 hover:text-red-800 text-sm font-medium">
-                  Hapus
-                </button>
+                ))}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
+        {/* Pagination */}
+        {reviews.length > reviewsPerPage && (
+          <div className="flex justify-center items-center gap-2 mt-6 py-4 bg-white rounded-b-xl">
+            <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed">&lt; Sebelumnya</button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button key={i + 1} onClick={() => paginate(i + 1)} className={`px-3 py-1 border rounded-md text-sm font-medium ${currentPage === i + 1 ? 'bg-gray-800 text-white' : 'bg-white text-gray-700'}`}>{i + 1}</button>
+            ))}
+            <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed">Selanjutnya &gt;</button>
+          </div>
+        )}
       </div>
+
+      {/* Modal Balas Review */}
+      {respond && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl">
+            <h2 className="mb-4 text-xl font-bold text-gray-800">Balas Ulasan</h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Membalas ulasan dari <b>{reviews.find(r => r.id === respondData.reviewId)?.customerName}</b>
+            </p>
+            <textarea
+              className="w-full rounded-lg border border-gray-300 p-3 text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              rows={4}
+              placeholder="Tulis balasan admin di sini..."
+              value={respondData.replyText}
+              onChange={(e) => setRespondData((prev) => ({ ...prev, replyText: e.target.value }))}
+            />
+            <div className="mt-4 flex justify-end gap-3">
+              <button onClick={() => setRespond(false)} className="rounded-lg bg-gray-200 px-6 py-2 text-gray-700 hover:bg-gray-300 transition-colors">Batal</button>
+              <button onClick={handleReplyReview} className="rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 transition-colors">Kirim</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -738,6 +789,8 @@ export default function KosAdminDashboard() {
     reviewId: "",
     replyText: ""
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 5;
 
   //untuk roomtype
   useEffect(() => {
@@ -968,21 +1021,25 @@ export default function KosAdminDashboard() {
 
   //Reviews
   useEffect(() => {
-    fetch(API_BASE_REVIEW)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setReviews(data);
-        } else if (Array.isArray(data.$values)) {
-          setReviews(data.$values);
-        } else {
-          setReviews([]);
-        }
-      })
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false));
+    const fetchReviews = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(API_BASE_REVIEW);
+        if (!res.ok) throw new Error('Gagal mengambil data ulasan.');
+        const data = await res.json();
+        const normalizedData = Array.isArray(data) ? data : (Array.isArray(data.$values) ? data.$values : []);
+        setReviews(normalizedData);
+      } catch (err) {
+        alert(err.message);
+        console.error("Error fetching reviews:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReviews();
   }, []);
 
+  //untuk mengatasi tombol balasan review untuk admin
   const handleReplyReview = async () => {
     try {
       if (!respondData.reviewId) {
@@ -1011,13 +1068,27 @@ export default function KosAdminDashboard() {
     }
   };
 
-  const openRespondModal = (id) => {
-    setRespondData({ reviewId: id, replyText: "" });
+  //untuk mengatasi membuka modal respon dari admin
+  const openRespondModal = (id, currentReply = '') => {
+    setRespondData({ reviewId: id, replyText: currentReply });
     setRespond(true);
   };
 
-  const handleDeleteReview = async () => {
-    alert("tombol hapus di tekan");
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  //untuk mengatasi tombol hapus untuk admin
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus ulasan ini?")) return;
+    try {
+      const res = await fetch(`${API_BASE_REVIEW}/${reviewId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Gagal menghapus ulasan.");
+
+      alert("Ulasan berhasil dihapus!");
+      setReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
   };
 
   // Update dashboard data when other data changes
@@ -1114,7 +1185,7 @@ export default function KosAdminDashboard() {
           <div className="space-y-4">
             {reviews.slice(0, 5).map(review => (
               <div key={review.id} className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1">
                   <p className="font-medium">{review.guestName}</p>
                   <div className="flex items-center">
                     <Star className="h-4 w-4 text-yellow-400 fill-current" />
@@ -1174,7 +1245,11 @@ export default function KosAdminDashboard() {
         respond,
         setRespond,
         setRespondData,
-        respondData
+        respondData,
+        paginate,
+        reviewsPerPage,
+        currentPage,
+        rooms
       }} />;
       case 'gallery': return <GalleryLayout{...{
         loading,

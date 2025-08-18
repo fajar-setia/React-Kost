@@ -5,7 +5,7 @@ import {
   Calendar, Clock, Users, CreditCard, Check, MapPin, Phone, Mail,
   Bed, Bath, Home, User, ArrowRight, Loader, AlertCircle, Wallet,
   Wind, DoorClosed, Table, Refrigerator, Tv, Shirt, Sun, BedDouble,
-  Snowflake, WashingMachine,CookingPot,KeyRound
+  Snowflake, WashingMachine, CookingPot, KeyRound
 } from 'lucide-react';
 
 const API_BASE_ROOM = 'http://localhost:5116/api/Room';
@@ -62,21 +62,30 @@ function DetailKamar({
         <div>
           <h4 className="font-semibold text-stone-800 mb-3">Fasilitas Kamar</h4>
           <div className="flex flex-wrap gap-2">
-            {Array.isArray(room.amenities?.$values) && room.amenities.$values.length > 0 ? (
-              room.amenities.$values.map((amenity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-1 bg-stone-100 text-stone-700 px-3 py-2 rounded-full text-sm border border-stone-200"
-                >
-                  {getAmenityIcon(amenity.name)}
-                  <span>{amenity.name}</span>
+            {(() => {
+              // 🔑 Normalisasi data amenities
+              const amenities = Array.isArray(room.amenities)
+                ? room.amenities
+                : Array.isArray(room.amenities?.$values)
+                  ? room.amenities.$values
+                  : [];
+
+              return amenities.length > 0 ? (
+                amenities.map((amenity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-1 bg-stone-100 text-stone-700 px-3 py-2 rounded-full text-sm border border-stone-200"
+                  >
+                    {getAmenityIcon(amenity.name)}
+                    <span>{amenity.name}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-stone-500 text-sm italic">
+                  Fasilitas akan segera tersedia
                 </div>
-              ))
-            ) : (
-              <div className="text-stone-500 text-sm italic">
-                Fasilitas akan segera tersedia
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -191,7 +200,6 @@ const PesananKamar = () => {
 
     return hargaPerMalam * jumlahKamar * (lamaInap || 0);
   };
-
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({

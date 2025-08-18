@@ -26,7 +26,7 @@ import {
   Sun,
   Clock
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 
 const API_BASE_ROOM = 'http://localhost:5116/api/Room';
@@ -34,6 +34,8 @@ const API_BASE_ROOM_TYPE = "http://localhost:5116/api/roomtype";
 
 const Kamar = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [searchParams] = useSearchParams();
+  const roomTypeFromUrl = searchParams.get('type');
   const [rooms, setRooms] = useState([]);
   const [roomTypes, setRoomTypes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ const Kamar = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
   const [isVisible, setIsVisible] = useState(false);
-  const [selectedRoomType, setSelectedRoomType] = useState('all');
+  const [selectedRoomType, setSelectedRoomType] = useState(roomTypeFromUrl || 'all');
 
   const navigate = useNavigate();
 
@@ -49,36 +51,30 @@ const Kamar = () => {
     setIsVisible(true);
   }, []);
 
+  // Helper untuk menormalkan respons .NET
+  const toArray = (p) => {
+    if (Array.isArray(p)) return p;
+    if (Array.isArray(p?.$values)) return p.$values;
+    if (Array.isArray(p?.data)) return p.data;
+    return [];
+  };
+
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(API_BASE_ROOM);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const res = await fetch(API_BASE_ROOM);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-        const data = await response.json()
-
-        // Handle different response structures
-        let roomsData = [];
-        if (Array.isArray(data)) {
-          roomsData = data;
-        } else if (data && Array.isArray(data.$values)) {
-          roomsData = data.$values;
-        } else if (data && Array.isArray(data.data)) {
-          roomsData = data.data;
-        } else {
-          console.warn('Unexpected API response structure:', data);
-          roomsData = [];
-        }
-
+        const payload = await res.json();
+        const roomsData = toArray(payload);   // <-- normalisasi
         setRooms(roomsData);
       } catch (err) {
-        setError(err.message);
-        setRooms([]);
+        console.error('fetchRooms error:', err);
+        setError(err.message || 'Gagal memuat kamar');
+        setRooms([]);                         // <-- JANGAN setRooms(data)
       } finally {
         setLoading(false);
       }
@@ -90,48 +86,47 @@ const Kamar = () => {
   useEffect(() => {
     const fetchRoomTypes = async () => {
       try {
-        const response = await fetch(API_BASE_ROOM_TYPE);
-        const data = await response.json();
-        const values = data?.$values ?? [];
-        const countsByType = {};
+        const res = await fetch(API_BASE_ROOM_TYPE);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-        rooms.forEach(room => {
-          const typeId = room.roomTypeId;
-          if (typeId) {
-            countsByType[typeId] = (countsByType[typeId] || 0) + 1;
-          }
-        });
+        const payload = await res.json();
+        const types = toArray(payload);       // <-- normalisasi
 
-        const parsed = values.map(item => ({
-          id: item.roomTypeId,
-          name: item.name,
-          count: countsByType[item.roomTypeId] || 0
+        // hitung jumlah kamar per tipe dari state rooms
+        const countsByType = rooms.reduce((acc, room) => {
+          const typeId = room.roomTypeId ?? room.roomType?.roomTypeId;
+          if (typeId) acc[typeId] = (acc[typeId] || 0) + 1;
+          return acc;
+        }, {});
+
+        const parsed = types.map(t => ({
+          id: t.roomTypeId ?? t.id,
+          name: t.name,
+          count: countsByType[t.roomTypeId ?? t.id] || 0,
         }));
 
-        const total = rooms.length;
-
-        parsed.unshift({
-          id: 'all',
-          name: 'Semua Kamar',
-          count: total,
-        });
-
+        parsed.unshift({ id: 'all', name: 'Semua Kamar', count: rooms.length });
         setRoomTypes(parsed);
-      } catch (error) {
-        console.error('Error fetching room types:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error('fetchRoomTypes error:', err);
+        setError(err.message || 'Gagal memuat tipe kamar');
+        setRoomTypes([]);
       }
+      // tidak mengubah setLoading di sini, biar loading global tidak “kedip”
     };
 
+    // panggil hanya setelah rooms ada (opsional)
     fetchRoomTypes();
   }, [rooms]);
 
+
   // Filter rooms sesuai tipe yang dipilih
   const filteredRooms = rooms.filter(room => {
-    if (selectedRoomType === 'all') return true;
-    return room.roomTypeId === selectedRoomType;
+    // PENTING: Perbaiki logika di sini
+    if (selectedRoomType === 'all' || selectedRoomType === 'Semua Kamar') {
+      return true;
+    }
+    return room.roomType?.name === selectedRoomType;
   });
 
   const getAmenityIcon = (amenity) => {
@@ -308,20 +303,24 @@ const Kamar = () => {
               {roomTypes.map((type) => (
                 <button
                   key={type.id}
-                  onClick={() => setSelectedRoomType(type.id)}
+                  onClick={() => setSelectedRoomType(type.name)}
                   disabled={type.count === 0 && type.id !== 'all'}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 ${selectedRoomType === type.id
-                    ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg'
-                    : type.count === 0 && type.id !== 'all'
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200'
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-medium transition-all duration-300 ${
+                    // PENTING: Perbaiki kondisi di sini!
+                    selectedRoomType === type.name || (selectedRoomType === 'all' && type.name === 'Semua Kamar')
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg'
+                      : type.count === 0 && type.id !== 'all'
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200'
                     }`}
                 >
                   {getRoomTypeIcon(type.id)}
                   <span>{type.name}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${selectedRoomType === type.id
-                    ? 'bg-white/20 text-white'
-                    : 'bg-stone-200 text-stone-600'
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    // PENTING: Perbaiki kondisi di sini juga
+                    selectedRoomType === type.name || (selectedRoomType === 'all' && type.name === 'Semua Kamar')
+                      ? 'bg-white/20 text-white'
+                      : 'bg-stone-200 text-stone-600'
                     }`}>
                     {type.count}
                   </span>
@@ -468,16 +467,27 @@ const Kamar = () => {
 
                         {/* Amenities */}
                         <div className="flex flex-wrap gap-2 mb-6">
-                          {Array.isArray(room.amenities?.$values) && room.amenities.$values.length > 0 ? (
-                            room.amenities.$values.map((amenity, amenityIndex) => (
-                              <div key={amenityIndex} className="flex items-center gap-1 bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm border border-stone-200 hover:border-rose-300 transition-colors">
-                                {getAmenityIcon(amenity.name)}
-                                <span>{amenity.name}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-stone-500 text-sm italic">Fasilitas akan segera tersedia</div>
-                          )}
+                          {(() => {
+                            const amenities = Array.isArray(room.amenities)
+                              ? room.amenities
+                              : Array.isArray(room.amenities?.$values)
+                                ? room.amenities.$values
+                                : [];
+
+                            return amenities.length > 0 ? (
+                              amenities.map((amenity, i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center gap-1 bg-stone-100 text-stone-700 px-3 py-1 rounded-full text-sm border border-stone-200 hover:border-rose-300 transition-colors"
+                                >
+                                  {getAmenityIcon(amenity.name)}
+                                  <span>{amenity.name}</span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-stone-500 text-sm italic">Fasilitas akan segera tersedia</div>
+                            );
+                          })()}
                         </div>
 
                         {/* Action Buttons */}
