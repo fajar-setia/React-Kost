@@ -219,7 +219,7 @@ export default function KosGallery() {
               </span>
             </h1>
 
-            <p className="text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed mb-12">
+            <p data-aos="fade-in" className="text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed mb-12">
               Lihat sendiri kenyamanan dan kemewahan yang kami tawarkan melalui koleksi foto eksklusif dari setiap sudut Kos Mawar
             </p>
 
@@ -312,7 +312,7 @@ export default function KosGallery() {
       </section>
 
       {/* Gallery Grid */}
-      <section className="pb-20">
+      <section data-aos="fade-right" className="pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {filteredImages.length === 0 ? (
             <div className="text-center py-20">
@@ -346,6 +346,7 @@ export default function KosGallery() {
                         onError={(e) => {
                           e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y3ZjhmOSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM2YjczODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HYW1iYXIgVGlkYWsgRGl0ZW11a2FuPC90ZXh0Pjwvc3ZnPg==';
                         }}
+                        loading='lazy'
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
@@ -420,6 +421,7 @@ export default function KosGallery() {
               onError={(e) => {
                 e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iIzM3NDE0OSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiNmZmZmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HYW1iYXIgVGlkYWsgRGl0ZW11a2FuPC90ZXh0Pjwvc3ZnPg==';
               }}
+              loading='lazy'
             />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-xl text-white">
               <h3 className="text-2xl font-bold mb-2">{selectedImage.title}</h3>

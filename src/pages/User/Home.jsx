@@ -275,6 +275,7 @@ export default function EnhancedKosanHomepage() {
                   src={gambarr}
                   alt="Interior Kos Adipati"
                   className="w-full h-full object-cover"
+                  loading='lazy'
                 />
               </div>
             </div>
@@ -399,6 +400,7 @@ export default function EnhancedKosanHomepage() {
                     src={room.image}
                     alt={room.type}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    loading='lazy'
                   />
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1 text-sm font-semibold text-stone-800">
                     {room.size}

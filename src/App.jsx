@@ -10,21 +10,29 @@ import PesananKamar from './pages/Boking/PesananKamar'
 import DetailKamar from './pages/viewRoom/detailRoom'
 import EnhancedKosanHomepage from './pages/User/Home'
 import LocationPage from './pages/User/Lokasi'
+import { Suspense,lazy } from 'react'
+
+
+const Home = lazy(() => import('../src/pages/User/Home'));
+
 
 function App() {
 
   return (
     <>
       <Navbar />
-      <Routes>
-        <Route path='/' element={<EnhancedKosanHomepage />} />
-        {/* <Route path='/' element={<KosAdminDashboard/>} /> */}
-        <Route path='/Kamar' element={<Kamar />} />
-        <Route path='/Gallery' element={<Gallery />} />
-        <Route path="/PesananKamar/:roomId" element={<PesananKamar />} />
-        <Route path="/detailRoom/:roomId" element={<DetailKamar />} />
-        <Route path='/Lokasi' element={<LocationPage/>}/>
-      </Routes>
+      <Suspense fallback={<div>loading page....</div>}>
+        <Routes>
+          <Route path='/' element={<EnhancedKosanHomepage />} />
+          {/* <Route path='/' element={<KosAdminDashboard/>} /> */}
+          <Route path='/Kamar' element={<Kamar />} />
+          <Route path='/Gallery' element={<Gallery />} />
+          <Route path="/PesananKamar/:roomId" element={<PesananKamar />} />
+          <Route path="/detailRoom/:roomId" element={<DetailKamar />} />
+          <Route path='/Lokasi' element={<LocationPage />} />
+        </Routes>
+      </Suspense>
+
       <Footer />
     </>
   )
