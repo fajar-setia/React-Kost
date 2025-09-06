@@ -4,6 +4,9 @@ import {
   Camera,
   MapPin, Bath, Bed, Coffee, Car, Shield, X, ChevronLeft, ChevronRight, Filter, Grid, List, Loader
 } from 'lucide-react';
+import 'animate.css';
+import Aos from 'aos';
+import 'aos/dist/aos.css';
 
 const API_BASE_GALLERY = "http://localhost:5116/api/gallery";
 
@@ -152,6 +155,10 @@ export default function KosGallery() {
     });
   };
 
+  useEffect(() => {
+    Aos.init({ duration: 3000, once: true }); // once = animasi hanya sekali
+  }, []);
+
   // Loading State
   if (loading) {
     return (
@@ -197,17 +204,17 @@ export default function KosGallery() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className={`transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 px-6 py-3 rounded-full text-sm font-semibold mb-8 border border-rose-200">
+            <div data-aos="fade-down" className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 px-6 py-3 rounded-full text-sm font-semibold mb-8 border border-rose-200">
               <Camera className="w-4 h-4" />
               Gallery Foto Premium
             </div>
 
             <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-slate-800 to-stone-800 bg-clip-text text-transparent">
+              <span data-aos="fade-left" className="bg-gradient-to-r from-slate-800 to-stone-800 bg-clip-text text-transparent">
                 Jelajahi
               </span>
               <br />
-              <span className="bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+              <span data-aos="fade-right" className="bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
                 Kos Mawar
               </span>
             </h1>

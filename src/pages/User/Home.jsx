@@ -189,14 +189,10 @@ export default function EnhancedKosanHomepage() {
     setCurrentSlide((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-stone-50">
       {/* Enhanced Hero Section */}
-      <section id="home" className="relative pt-32 pb-24 overflow-hidden min-h-screen flex items-center shadow-2xl bg-gradient-to-r from-white via-white to-rose-700">
-        <div className="absolute left-0 w-[50%] h-full pointer-events-none z-0 bg-gradient-to-r from-rose-700/60 via-white to-white" />
-
+      <section id="home" className="relative pt-32 pb-24 overflow-hidden min-h-screen flex items-center shadow-4xl bg-gradient-to-br from-white via-white to-rose-700">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Enhanced Left Content */}
